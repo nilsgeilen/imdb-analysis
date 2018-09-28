@@ -9,7 +9,7 @@ function parseLine (line, sep) {
 
 function parseCsvWithHeader (source, sep = ',') {
     let lines = source.split (/\r?\n/)
-    let headers = parseLine(lines.shift(), sep)
+    let headers = parseLine(lines.shift(), sep).map(header => header.replace(/\(|\)/g,"").replace(/\s/g, "_").toLowerCase())
     let results = []
     for (let row of lines) {
         let obj = new Object()
