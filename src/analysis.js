@@ -29,6 +29,7 @@ function visualizeData() {
     displayDirectorStats()
     displayDecadeStats()
     scatterRuntime()
+    displayCoutryStats()
 }
 
 function displayDirectorStats (N = 10) {
@@ -189,6 +190,48 @@ function scatterRuntime() {
              }
         }
     })
+}
+
+function displayCoutryStats() {
+    $.ajax({
+        url: 'data/countries.csv',
+        dataType: 'text',
+        type: "GET",
+        success: data => {
+            process(data)
+        },
+        error: (e1,e2,e3) => {alert(e1); alert(e2); alert(e3)}
+    })
+
+    function process(data) {
+        let map = parseMapfromCsv(data)
+
+        let countries = createCountryList(getData(), map)
+        console.log(JSON.stringify(countries))
+        for (let country in countries) {
+            console.log(JSON.stringify(countries[country]))
+        }
+    }
+}
+
+function createCountryList(films, map) {
+    let result = {}
+    for (let film of films) {
+        let countries = map[film.Title+";"+film.Year]
+        if (countries) {
+            for (let country of countries.split(',')) {
+                if (result[country]) {
+                    result[country].films.push(film)
+                } else {
+                    result[country] = {
+                        films: [film],
+                        name: country
+                    } 
+                }
+            }
+        }
+    }
+    return result
 }
 
 function createDirectorList (data) {
