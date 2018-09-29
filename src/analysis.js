@@ -1,8 +1,11 @@
 
 const COLOR_CNT = "blue"
 const COLOR_AVG = "red"
+const COLOR_COPROD = "gray"
 
-const getCountryData = function()  {
+const COPRODUCTION = "coproduction"
+
+const getCountryData = function ()  {
     let data = null
     return function (callback) {
         if (data) {
@@ -16,6 +19,21 @@ const getCountryData = function()  {
                 error: (e1,e2,e3) => {alert(e1); alert(e2); alert(e3)}
             })
         }
+    }
+}()
+
+const visualizeData = function () {
+    let charts = []
+    let charts_async = []
+    return function (films) {
+        for (let chart of charts.concat(charts_async))
+            chart.destroy()
+        films = films.filter(film => film.title_type && film.title_type.match(/movie|tvMovie/))
+        charts_async = []
+        displayCoutryStatsAsync(films, charts_async)
+        charts = displayDirectorStats(films)
+            .concat(displayDecadeStats(films))
+            .concat(scatterRuntime(films))
     }
 }()
 
@@ -34,38 +52,82 @@ function loadDataFromFile (evt) {
 }
 document.getElementById('fileinput').addEventListener('change', loadDataFromFile, false)
 
-
-function visualizeData(films) {
-    displayDirectorStats(films)
-    displayDecadeStats(films)
-    scatterRuntime(films)
-    displayCoutryStats(films)
-}
-
 function displayDirectorStats (films, N = 10) {
     let directors = createDirectorList(films)
-    let director_stats = []
-    for (let director in directors)
-        director_stats.push({
-            name : director, 
-            film_cnt : directors[director].films.length,
-            avg_rating : avg(directors[director].films, "your_rating")
-        })
-    director_stats.sort((a, b) => a.film_cnt === b.film_cnt ? a.avg_rating < b.avg_rating : a.film_cnt < b.film_cnt )
+    for (let director of directors) {
+            director.film_cnt = director.films.length,
+            director.avg_rating = avg(director.films, "your_rating")
+    }
+    let top_10 = directors.sort((a, b) => (b.film_cnt * 1000 + b.avg_rating) - (a.film_cnt * 1000 + a.avg_rating)).slice(0, N)
 
     let dataset1 = {
         backgroundColor : "blue",
         label: '# of Films',
-        data: director_stats.slice(0,N).map(entry => entry.film_cnt)
+        data: top_10.map(entry => entry.film_cnt)
     }
     let dataset2 = {
         backgroundColor : "red",
         label: 'Average Rating',
-        data: director_stats.slice(0,N).map(entry => entry.avg_rating)
+        data: top_10.map(entry => entry.avg_rating)
     }
 
-    let labels = director_stats.map(dirstat => dirstat.name).slice(0,N)
-    plotBarChart($("#ctx1"), labels, [dataset1, dataset2])
+    let labels = top_10.map(dirstat => dirstat.name)
+    let chart1 = plotBarChart($("#ctx1"), labels, [dataset1, dataset2])
+
+    let top_diff = directors.filter(director => director.film_cnt >= 2).map(director => ({
+        director : director, 
+        diff : argmax(director.films, "your_rating").your_rating - argmin(director.films, "your_rating").your_rating
+    })).sort((a,b) => b.diff - a.diff).slice(0,5).map(x => ({
+        name: x.director.name,
+        diff: x.diff,
+        films: x.director.films.slice().sort((a,b) => a.your_rating - b.your_rating)
+    }))
+
+    let datasets = top_diff.map(elem => ({
+        //label: elem.director.name,
+        data: elem.films.map(film => ({x: film.your_rating, y: elem.name, title: film.title})),
+        fill: false,
+        borderColor: COLOR_AVG,
+        backgroundColor: COLOR_AVG,
+        pointStyle : 'rectRounded',
+        pointRadius : 10.0,
+        pointHoverRadius :10.0,
+        pointHitRadius : 10.0
+    }))
+
+    let chart2 = new Chart($("#ctx1b"), {
+        type: 'line',
+        data: {
+            yLabels : [""].concat(top_diff.map(x => x.name)).concat([""]),
+            datasets : datasets
+        },
+        options: {
+            legend: {
+                display: false
+            },
+            scales: {
+                xAxes: [{
+                    type: 'linear',
+                    position: 'bottom'
+                }],
+                yAxes: [{
+                    type: 'category',
+                    position: 'left',
+                    display: true,
+                    ticks: {
+                        reverse: true
+                        },
+                    }]
+            },
+            tooltips: {
+                callbacks: {
+                   label: (tooltipItem, data) => data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].title
+                }
+             }
+        }
+    })
+
+    return [chart1, chart2]
 }
 
 function displayDecadeStats(films) {
@@ -92,9 +154,7 @@ function displayDecadeStats(films) {
         dataset2.data.push(avg(decades[key], "your_rating"))
     }
 
-    var ctx = document.getElementById("ctx2")
-
-    var myChart = new Chart(ctx, {
+    let chart1 = new Chart($("#ctx2"), {
         type: 'bar',
         data: {
             
@@ -122,6 +182,8 @@ function displayDecadeStats(films) {
             
         }
     })
+
+    return [chart1]
 }
 
 function scatterRuntime(films) {
@@ -138,9 +200,7 @@ function scatterRuntime(films) {
         dataset.data.push({x: film.runtime_mins, y: film.your_rating})
     }
 
-    var ctx = document.getElementById("ctx3")
-
-    var scatterChart = new Chart(ctx, {
+    let scatterChart = new Chart($("#ctx3"), {
         type: 'scatter',
         data: {
             labels: films.map(film => film.title),
@@ -163,9 +223,11 @@ function scatterRuntime(films) {
              }
         }
     })
+
+    return [scatterChart]
 }
  
-function displayCoutryStats(films) {
+function displayCoutryStatsAsync(films, charts) {
     getCountryData(data =>  {
         let map = parseMapfromCsv(data)
 
@@ -173,32 +235,35 @@ function displayCoutryStats(films) {
 
         for (let country of countries) {
             if (!country.films) {
-                console.log(country.name)
+                console.log("Country has no films: " + country.name)
                 continue
             }
-            country.film_cnt = country.films.length
+            country.film_cnt = country.films_excl_coprod.length
             country.avg_rating = avg(country.films, "your_rating")
         }
 
         countries.sort((a,b) => a.film_cnt < b.film_cnt)
 
-        const N = countries.length > 12 ? 12 : countries.length
+        const N_1 = countries.length > 12 ? 12 : countries.length
 
         let dataset_cnt = {
             backgroundColor : ["#ff8000", "#00ff80", "#ff0080", "#80ff00", "#0080ff", "#8000ff",
                 "#a0ff00", "#00a0ff", "#a000ff", "#ffa000", "#00ffa0", "#ff00a0"],
             label: '# of Films',
-            data: countries.slice(0,N).map(entry => entry.film_cnt).concat([sum(countries.slice(N), "film_cnt")])
+            data: countries.slice(0,N_1).map(entry => entry.film_cnt).concat([sum(countries.slice(N_1), "film_cnt")])
         }
-        let dataset_avg = {
-            backgroundColor : COLOR_AVG,
-            label: 'Average Rating',
-            data: countries.slice(0,N).map(entry => entry.avg_rating)
+
+        for (let i = 0; i < dataset_cnt.backgroundColor.length; i++) {
+            console.log(countries[i].name)
+            if (countries[i].name === COPRODUCTION) {
+                dataset_cnt.backgroundColor[i] = COLOR_COPROD
+                break
+            }
         }
     
-        let labels = countries.slice(0,N).map(dirstat => dirstat.name)
+        let labels = countries.slice(0,N_1).map(dirstat => dirstat.name)
         labels.push("other")
-        var myDoughnutChart = new Chart($("#ctx4"), {
+        charts.push(new Chart($("#ctx4"), {
             type: 'doughnut',
             data: {
                 labels : labels,
@@ -209,14 +274,47 @@ function displayCoutryStats(films) {
                    position: "right"
                 }
             }
-        })
-        //plotBarChart($("#ctx4"), labels, [dataset_cnt, dataset_avg])
+        }))
+
+        const N_2 = 15
+
+        let top_countries = countries.filter(country => country.name !== COPRODUCTION).sort((a,b) => b.films.length - a.films.length).slice(0,N_2)
+
+        let dataset_excl_coprod = {
+            backgroundColor : "#000040",
+            label: '# of domestic films',
+            data: top_countries.map(entry => entry.film_cnt).concat([sum(countries.slice(N_2), "film_cnt")])
+        }
+
+        let dataset_coprod = {
+            backgroundColor : "#0000ff",
+            label: '# of coproductions',
+            data: top_countries.map(entry => entry.films.length  - entry.film_cnt).concat([sum(countries.slice(N_2), "film_cnt")])
+        }
+
+        charts.push(plotBarChart($("#ctx4b"), top_countries.map(entry => entry.name), [dataset_excl_coprod, dataset_coprod], false, true))
+
+        const N_3 = N_2/2
+        let countries_by_avg_rating = countries.filter(country => country.films.length >= 2).sort((a,b) => b.avg_rating - a.avg_rating)
+        if (countries_by_avg_rating.length > N_3*2+1)
+            countries_by_avg_rating = countries_by_avg_rating.slice(0,N_3).concat([{name: '...', avg_rating: 1}]).concat(countries_by_avg_rating.slice(-N_3))
+        let dataset_avg = {
+            backgroundColor : COLOR_AVG,
+            label: 'Average Rating',
+            data: countries_by_avg_rating.map(entry => entry.avg_rating)
+        }
+        charts.push(plotBarChart($("#ctx4c"), countries_by_avg_rating.map(entry => entry.name), [dataset_avg], false))
+
     })
 }
 
-function plotBarChart (ctx, labels, datasets, beginAtZero = true) {
-    let options = {}
-    if (datasets.length === 2) {
+function plotBarChart (ctx, labels, datasets, beginAtZero = true, stacked) {
+    let options = {
+        legend: {
+            display: datasets.length > 1
+        }
+    }
+    if (!stacked && datasets.length === 2) {
         datasets[0].xAxisID = 'A'
         datasets[1].xAxisID = 'B'
         options.scales = {
@@ -239,10 +337,14 @@ function plotBarChart (ctx, labels, datasets, beginAtZero = true) {
     } else {
         options.scales = {
             xAxes: [{
-              type: 'linear',
-              ticks: {
+                stacked: stacked,
+                type: 'linear',
+                ticks: {
                 beginAtZero: beginAtZero
               }
+            }],
+            yAxes: [{
+                 stacked: stacked
             }]
           }
     }
@@ -257,28 +359,30 @@ function plotBarChart (ctx, labels, datasets, beginAtZero = true) {
     })
 }
 
+function Country (name, films = [], films_excl_coprod = []) {
+    this.name = name
+    this.films = films
+    this.films_excl_coprod = films_excl_coprod
+}
+
 function createCountryList(films, map) {
     let result = {}
+    result[COPRODUCTION] = new Country(COPRODUCTION)
     for (let film of films) {
         let countries = map[film.title+";"+film.year]
         if (countries) {
-            for (let country of countries.split(',')) {
+            countries = countries.split(/,/)
+            for (let country of countries) {
                 if (result[country]) {
                     result[country].films.push(film)
                 } else {
-                    result[country] = {
-                        films: [film],
-                        name: country
-                    } 
+                    result[country] = new Country(country, [film]) 
                 }
             }
+            (countries.length === 1 ? result[countries[0]] : result[COPRODUCTION]).films_excl_coprod.push(film)
         }
     }
-    let list = []
-    for (let i in result) {
-        list.push(result[i])
-    }
-    return list
+    return valList(result)
 }
 
 function createDirectorList (data) {
@@ -291,13 +395,14 @@ function createDirectorList (data) {
                     directors[director].films.push(film)
                 } else {
                     directors[director] = {
-                        films : [film]
+                        films : [film],
+                        name : director
                     }
                 }
             }
         }
     }
-    return directors
+    return valList(directors)
 }
 
 function decade (year) {
@@ -324,14 +429,3 @@ function createDecadeList (data) {
     return decades
 }
 
-function avg (list, field) {
-    if (list.length) 
-        return sum(list, field) / list.length
-    else return 0
-}
-
-function sum (list, field) {
-    if (field) 
-        return list.reduce((sum, val) => sum + +val[field], 0)
-    else return list.reduce((sum, val) => sum + +val, 0)
-}
