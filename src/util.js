@@ -60,3 +60,10 @@ function zip (lists) {
     console.log(result)
     return result
 }
+
+function tee (f) {
+    return g => arg => {
+        f(arg)
+        g(arg)
+    }
+}

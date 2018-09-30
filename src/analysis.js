@@ -307,7 +307,8 @@ function displayCoutryStatsAsync(films, charts) {
             country.avg_rating = +avg(country.films, getter("your_rating")).toFixed(1)
         }
 
-        countries.sort((a,b) => a.film_cnt < b.film_cnt)
+        countries.sort((a,b) => b.film_cnt - a.film_cnt)
+        console.log(countries)
 
         let N_1 = 12
         N_1 = countries.length > N_1 ? N_1 : countries.length
@@ -319,13 +320,12 @@ function displayCoutryStatsAsync(films, charts) {
         }
 
         let dataset_cnt = {
-            backgroundColor : STD_COLORS.slice(0, N_1).concat([COLOR_OTHER]),
+            backgroundColor : [...STD_COLORS.slice(0, N_1), COLOR_OTHER],
             label: '# of Films',
             data: [...countries.slice(0,N_1).map(entry => entry.film_cnt), sum(countries.slice(N_1), getter("film_cnt"))]
         }
 
         for (let i = 0; i < dataset_cnt.backgroundColor.length; i++) {
-            console.log(countries[i].name)
             if (countries[i].name === COPRODUCTION) {
                 dataset_cnt.backgroundColor[i] = COLOR_COPROD
                 break
