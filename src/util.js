@@ -10,32 +10,64 @@ function sum (list, field) {
     else return list.reduce((sum, val) => sum + +val, 0)
 }
 
-function argmax (list, field) {
-    if (list.length === 0)
-        return null
-    if (!field) 
-        field = id => id
+function argmax (fn) {
+    return (list) => {
+        if (list.length === 0)
+            return null
 
-    let result = list[0]
-    for (let i = 1; i < list.length; i++) {
-        if (field(list[i], result) > 0)
-            result = list[i]
+        let result = list[0]
+        for (let i = 1; i < list.length; i++) {
+            if (fn(list[i], result) > 0)
+                result = list[i]
+        }
+        return result
+    }
+}
+
+function argmin (fn) {
+    return (list) => {
+        if (list.length === 0)
+            return null
+
+        let result = list[0]
+        for (let i = 1; i < list.length; i++) {
+            if (fn(list[i], result) < 0)
+                result = list[i]
+        }
+        return result
+    }
+}
+
+function round (x, decimals = 0) {
+    const m = Math.pow(10, decimals)
+    return Math.round(x * m) / m
+}
+
+function range (from, to) {
+    if (!to) {
+        to = from
+        from = 0
+    }
+    let result = Array(to - from)
+    for (let  i = 0; i < to - from; i++) {
+        result[i] = from + i
     }
     return result
 }
 
-function argmin (list, field) {
-    if (list.length === 0)
-        return null
-    if (!field) 
-        field = id => id
-    
-    let result = list[0]
-    for (let i = 1; i < list.length; i++) {
-        if (field(list[i], result) < 0)
-            result = list[i]
+function groupBy (fn) {
+    return list => {
+        let map = {}
+        for (let elem of list) {
+            let key = fn(elem)
+            if (key in map) {
+                map[key].push(elem)
+            } else {
+                map[key] = [elem]
+            }
+        }
+        return map
     }
-    return result
 }
 
 function valList (map) {
@@ -47,6 +79,23 @@ function valList (map) {
 
 function getter (field) {
     return obj => obj[field]
+}
+
+function comparator (field) {
+    if (field)
+        return (a, b) => a[field] - b[field]
+    else return (a, b) => a - b
+}
+
+function emitter (list) {
+    let  i = 0
+    return () => {
+        if (i < list.length) {
+            return list[i++]
+        } else {
+            return null
+        }
+    }
 }
 
 function zip (lists) {

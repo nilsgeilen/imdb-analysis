@@ -1,3 +1,23 @@
 p {
     padding-bottom: .5cm;
 }
+
+.chart {
+    padding: 0;
+    margin: auto;
+    display: block;
+}
+
+question {
+    /*font-weight: bold;*/
+    color: #4000d0;
+}
+
+h4 {
+    color: #4000d0;
+}
+
+.container{
+    max-width:800px;
+    margin:0 auto;
+}

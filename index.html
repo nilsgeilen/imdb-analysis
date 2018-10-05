@@ -9,32 +9,98 @@
 </head>
 
 <body>
-    <div style="width: 800px; margin: 0 auto;">
-        <h1>IMDb Rating Analysis</h1>
-        <p>by Nils Geilen</p>
+    <div class="container" >
+        <div>
+        <div class="page-header">
+            <h1>IMDb Rating Analysis</h1>
+            <p>by Nils Geilen</p>
+        </div>
+    </div>
+   
         <p>Several plots which explore different aspect of a user's IMDb ratings</p>
-        <p>
+        <!-- <div class="panel panel-default">
             Upload your own data, you can export your ratings from IMDb as "ratings.csv"
             <input type="file" id="fileinput" />
-        </p>
-        <h4>Top 10 Favourite Directors</h4>
-        <p>
-            Lists the top ten directors by number of rated films, ties are broken by average rating
-            <div style="width:600px; height:450px;text-align: center;">
-                <canvas id="ctx1" width="600" height="450"></canvas>
+        </div> -->
+        <!-- <form class="md-form">
+            <div class="file-field">
+                <div class="btn btn-primary btn-sm float-left">
+                    <span>Choose file</span>
+                    <input type="file">
+                </div>
+                <div class="file-path-wrapper">
+                    <input class="file-path validate" type="text" placeholder="Upload your file">
+                </div>
             </div>
-            <div style="width:800px; height:400px;text-align: center;">
+        </form> -->
+
+        <p>
+            Upload your own data, you can export your ratings from IMDb as "ratings.csv" or load sample data.
+            <center>
+                <label class="btn btn-primary">
+                    Upload Data <input type="file" id="fileinput" hidden>
+                </label>
+                <label class="btn btn-outline-info">
+                    Use Sample Data
+                    <button onclick="alert(12)" hidden></button>
+                </label>
+            </center>
+        </p>
+        
+        
+
+    
+
+    <!-- <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text btn-primary" id="inputGroupFileAddon01">Upload</span>
+      </div>
+      <div class="custom-file">
+        <input type="file" class="custom-file-input btn-primary" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01">
+        <label class="custom-file-label btn-primary" for="inputGroupFile01">Choose file</label>
+      </div>
+    </div> -->
+        <h4>Your Favourite Directors</h4>
+        <p>
+            <question>Which are your favourite directors?</question>
+            This chart lists the top ten directors according to their score. Alternatively directors can be sorted by the number of their films which you have rated or the average rating you gave their films.
+            Only directors with at least two rated film are considered for the ranking.
+            The score for a director <i>d</i> is computed in the following way, where <i>R<sub>d</sub></i> denotes all of your ratings for films by director <i>d</i>:
+            <center><img src='img/formula.png' width='200'></center>
+            <br>
+            <center>
+                sort directors by their &nbsp;
+                <select id = "select_sorting_ctx1" onChange="createTopDirectorChart()">  
+                    <option value = "score">score</option> 
+                    <option value = "film_cnt"># of films</option> 
+                    <option value = "avg_rating">average rating</option> 
+                </select> 
+            </center>
+            <div style="width:600px; height:550px;" class="chart">
+                <canvas id="ctx1" width="600" height="550"></canvas>
+            </div>
+        </p>
+        <p>
+            <question>How did your favourite directors develop over time?</question>
+            The next visualizes the development of you top ten directors by plotting your ratings for their films over time given in years.
+            Different directors can be selected and deselected by clicking on their name in the legend.
+            <div style="width:800px; height:400px;" class="chart">
                 <canvas id="ctx1c" width="800" height="400"></canvas>
             </div>
-            <div style="width:800px; height:300px;text-align: center;">
+        </p>
+        <p>
+            <question>Which directors do you feel most ambiguous about?</question>
+            This chart shows the directors with the largest disparities between the lowest and the highest rating for two of their films, i.e. max(<i>R<sub>d</sub></i>) - min(<i>R<sub>d</sub></i>).
+            <div style="width:800px; height:300px;" class="chart">
                 <canvas id="ctx1b" width="800" height="300"></canvas>
             </div>
         </p>
 
         <h4>Decade Comparision</h4>
         <p>
-            Shows the number of ratings for films from different decades as well as the average rating
-            <div style="width:600px; height:300px;text-align: center;">
+            <question>Do you prefer older or newer films?</question>
+            This chart shows the number of ratings for films from different decades as well as the average rating per decade.
+            <div style="width:600px; height:300px;" class="chart">
                 <canvas id="ctx2" width="600" height="300"></canvas>
             </div>
         </p>
@@ -42,20 +108,30 @@
         <h4>Correlation between Runtime and Rating</h4>
         <p>
             This plot sets a films runtime in minutes in relation to its rating. Only movies and tv movies are considered, excluding tv series, documentaries etc.
-            <div style="width:600px; height:600px;text-align: center;">
+            <div style="width:600px; height:600px;" class="chart">
                 <canvas id="ctx3" width="600" height="600"></canvas>
             </div>
         </p>
 
         <h4>Comparision of Countries</h4>
         <p>
-            <div style="width:600px; height:450px;text-align: center;">
-                <canvas id="ctx4" width="600" height="450"></canvas>
+            <question>Which countries produce the films you watch?</question>
+            This pie chart breaks down the number of ratings for film produced in different countries. Coproductions are handled as their own category.
+            <div style="width:600px; height:400px;" class="chart">
+                <canvas id="ctx4" width="600" height="400"></canvas>
             </div>
-            <div style="width:600px; height:450px;text-align: center;">
+        </p>
+        <p>
+            <question>Which countries tend cooperate to produce films?</question>
+            The next diagram lists the countries with the most ratings including corpoductions. Films produced by a single country and corpoductions are listed seperately.
+            <div style="width:600px; height:450px;" class="chart">
                 <canvas id="ctx4b" width="600" height="450"></canvas>
             </div>
-            <div style="width:600px; height:450px;text-align: center;">
+        </p>
+        <p> 
+            <question>Which countries produce the best or the worst films?</question>
+            This chart orders countries according to their average rating. Coproductions count fully for all envolved countries and only countries with at least three rated film are considered.
+            <div style="width:600px; height:450px;" class="chart">
                 <canvas id="ctx4c" width="600" height="450"></canvas>
             </div>
         </p>

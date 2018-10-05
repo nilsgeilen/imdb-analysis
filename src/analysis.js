@@ -2,13 +2,15 @@
 const COLOR_CNT = "blue"
 const COLOR_AVG = "red"
 const COLOR_RATING = "orange"
+const COLOR_SCORE = "#80ff00"
 const COLOR_COPROD = "gray"
 const COLOR_OTHER = "gray"
 
 const STD_COLORS = ["#ff8000", "#00ff80", "#ff0080", "#80ff00", "#0080ff", "#8000ff",
     "#a0ff00", "#00a0ff", "#a000ff", "#ffa000", "#00ffa0", "#ff00a0"]
 
-const COPRODUCTION = "coproduction"
+const COUNTRY_COPRODUCTION = "coproduction"
+const COUNTRY_OTHER = "other"
 
 const getCountryData = function ()  {
     let data = null
@@ -29,19 +31,19 @@ const getCountryData = function ()  {
 
 const visualizeData = function () {
     let charts = []
-    let charts_async = []
     return function (films) {
-        for (let chart of charts.concat(charts_async))
+        for (let chart of charts)
             chart.destroy()
         films = films.filter(film => film.title_type && film.title_type.match(/movie|tvMovie/))
         charts_async = []
-        displayCoutryStatsAsync(films, charts_async)
+        displayCoutryStatsAsync(films)
         charts = [...displayDirectorStats(films), ...displayDecadeStats(films), ...scatterRuntime(films)]
+        displayFilmStats (films)
     }
 }()
 
 function loadDataFromFile (evt) {
-    var file = evt.target.files[0]   
+    const file = evt.target.files[0]   
     if (file) {
         let fr = new FileReader()
         fr.onload = e => {
@@ -55,41 +57,72 @@ function loadDataFromFile (evt) {
 }
 document.getElementById('fileinput').addEventListener('change', loadDataFromFile, false)
 
+function displayFilmStats (films) {
+    for (let film of films) {
+        film.rating_diff = film.your_rating - film.imdb_rating
+    }
+
+    films.sort((a, b) => b.rating_diff - a.rating_diff)
+
+    console.log(films)
+}
+
+
+
+const createTopDirectorChart = function () {
+    let chart = createBarChart($("#ctx1"))
+    return function (directors = createDirectorList(), N = 10) {
+
+        let order_primary = $('#select_sorting_ctx1').val()
+        let order_secondary = order_primary === 'film_cnt' ? 'avg_rating' : 'film_cnt'
+        let order = (a, b) => (b[order_primary] * 1000 + b[order_secondary]) - (a[order_primary] * 1000 + a[order_secondary])
+        let top_10 = directors.sort(order).slice(0, N)
+
+        let dataset1 = {
+            backgroundColor : COLOR_CNT,
+            label: '# of films',
+            data: top_10.map(entry => entry.film_cnt)
+        }
+        let dataset2 = {
+            backgroundColor : COLOR_AVG,
+            label: 'average rating',
+            data: top_10.map(entry => entry.avg_rating)
+        }
+        let dataset3 = {
+            backgroundColor : COLOR_SCORE,
+            label: 'score',
+            data: top_10.map(entry => entry.score)
+        }
+
+        let labels = top_10.map(dirstat => dirstat.name)
+        
+        chart(labels, [dataset3, dataset1, dataset2])
+    }
+}()
+
 function displayDirectorStats (films, N = 10) {
     let directors = createDirectorList(films)
-    for (let director of directors) {
-            director.film_cnt = director.films.length,
-            director.avg_rating = +avg(director.films, getter("your_rating")).toFixed(1)
-    }
-    let top_10 = directors.sort((a, b) => (b.film_cnt * 1000 + b.avg_rating) - (a.film_cnt * 1000 + a.avg_rating)).slice(0, N)
+    
 
-    let dataset1 = {
-        backgroundColor : "blue",
-        label: '# of Films',
-        data: top_10.map(entry => entry.film_cnt)
-    }
-    let dataset2 = {
-        backgroundColor : "red",
-        label: 'Average Rating',
-        data: top_10.map(entry => entry.avg_rating)
-    }
+    createTopDirectorChart(directors)
 
-    let labels = top_10.map(dirstat => dirstat.name)
-    let chart1 = plotBarChart($("#ctx1"), labels, [dataset1, dataset2])
+    //let top_10 = directors.sort((a, b) => 1000 * b.film_cnt + b.avg_rating - 1000 * a.film_cnt - a.avg_rating).slice(0, N)
+    //let top_10 = directors.sort((a, b) => b.film_cnt * b.avg_rating - a.film_cnt * a.avg_rating).slice(0, N)
+    function rank (director) {
+        return (director.avg_rating  - 5) * director.film_cnt
+    }
+    let top_10 = directors.sort((a, b) => rank(b) - rank(a)).slice(0, N)
 
-    let top_diff = directors.filter(director => director.film_cnt >= 2).map(director => ({
+
+
+    let top_diff = directors.map(director => ({
         director : director, 
-        diff : argmax(director.films, getter("your_rating")).your_rating - argmin(director.films, getter("your_rating")).your_rating
+        diff : argmax (comparator('your_rating')) (director.films).your_rating - argmin (comparator('your_rating')) (director.films).your_rating
     })).sort((a,b) => b.diff - a.diff).slice(0,5).map(x => ({
         name: x.director.name,
         diff: x.diff,
         avg_rating : x.director.avg_rating,
-        films: Object.entries(x.director.films.reduce((map, film) => {
-            if (film.your_rating in map)
-                map[film.your_rating].push(film)
-            else map[film.your_rating] = [film]
-            return map
-        }, {})).sort((a,b) => b[0] - a[0]).map(entry => ({
+        films: Object.entries(groupBy (getter('your_rating')) (x.director.films)).sort((a,b) => b[0] - a[0]).map(entry => ({
             your_rating : entry[0],
             title : entry[1].map(film => film.title).join(', '),
             film_cnt : entry[1].length
@@ -192,7 +225,7 @@ function displayDirectorStats (films, N = 10) {
         }
     })
 
-    return [chart1, chart2, chart3]
+    return [chart2, chart3]
 }
 
 function displayDecadeStats(films) {
@@ -248,6 +281,8 @@ function displayDecadeStats(films) {
         }
     })
 
+    console.log(valList(decades).map(films => argmax ((a,b) => 1000 * a.your_rating + a.imdb_rating - 1000 * b.your_rating - b.imdb_rating ) (films)))
+
     return [chart1]
 }
 
@@ -291,144 +326,186 @@ function scatterRuntime(films) {
 
     return [scatterChart]
 }
- 
-function displayCoutryStatsAsync(films, charts) {
-    getCountryData(data =>  {
-        let map = parseMapfromCsv(data)
 
-        let countries = createCountryList(films, map)
+const displayCoutryStatsAsync = function () {
+    const pie_chart = createChartHolder()
+    const bar_chart_cnt = createBarChart($("#ctx4b"))
+    const bar_chart_avg = createBarChart($("#ctx4c"))
+    return function (films) {
+        getCountryData(data =>  {
+            let map = parseMapfromCsv(data)
 
-        for (let country of countries) {
-            if (!country.films) {
-                console.log("Country has no films: " + country.name)
-                continue
+            let countries = createCountryList(films, map)
+
+            for (let country of countries) {
+                if (!country.films) {
+                    console.log("Country has no films: " + country.name)
+                    continue
+                }
+                country.film_cnt = country.films_excl_coprod.length
+                country.avg_rating = +avg(country.films, getter("your_rating")).toFixed(1)
             }
-            country.film_cnt = country.films_excl_coprod.length
-            country.avg_rating = +avg(country.films, getter("your_rating")).toFixed(1)
-        }
 
-        countries.sort((a,b) => b.film_cnt - a.film_cnt)
-        console.log(countries)
+            countries.sort((a,b) => b.film_cnt - a.film_cnt)
 
-        let N_1 = 12
-        N_1 = countries.length > N_1 ? N_1 : countries.length
-        for (let i = 0; i < N_1; i++) {
-            if (countries[i].film_cnt === 1) {
-                N_1 = i
-                break
-            }
-        }
-
-        let dataset_cnt = {
-            backgroundColor : [...STD_COLORS.slice(0, N_1), COLOR_OTHER],
-            label: '# of Films',
-            data: [...countries.slice(0,N_1).map(entry => entry.film_cnt), sum(countries.slice(N_1), getter("film_cnt"))]
-        }
-
-        for (let i = 0; i < dataset_cnt.backgroundColor.length; i++) {
-            if (countries[i].name === COPRODUCTION) {
-                dataset_cnt.backgroundColor[i] = COLOR_COPROD
-                break
-            }
-        }
-    
-        let labels = countries.slice(0,N_1).map(dirstat => dirstat.name)
-        labels.push("other")
-        charts.push(new Chart($("#ctx4"), {
-            type: 'doughnut',
-            data: {
-                labels : labels,
-                datasets : [dataset_cnt]
-            },
-            options: {
-                legend: {
-                   position: "right"
+            let N_1 = 12
+            N_1 = countries.length > N_1 ? N_1 : countries.length
+            for (let i = 0; i < N_1; i++) {
+                if (countries[i].film_cnt === 1) {
+                    N_1 = i
+                    break
                 }
             }
-        }))
 
-        const N_2 = 15
+            let country_sample = [...countries.slice(0, N_1), {name: COUNTRY_OTHER, film_cnt: sum(countries.slice(N_1), getter("film_cnt"))}]
+            let color_sample = emitter(STD_COLORS)
 
-        let top_countries = countries.filter(country => country.name !== COPRODUCTION).sort((a,b) => b.films.length - a.films.length).slice(0,N_2)
+            let dataset_cnt = {
+                backgroundColor : country_sample.map((country, i) => 
+                    country.name === COUNTRY_COPRODUCTION ? COLOR_COPROD : country.name === COUNTRY_OTHER ? COLOR_OTHER : color_sample()),
+                label: '# of Films',
+                data: country_sample.map(getter("film_cnt"))
+            }
+        
+            pie_chart(new Chart($("#ctx4"), {
+                type: 'doughnut',
+                data: {
+                    labels : country_sample.map(getter('name')),
+                    datasets : [dataset_cnt]
+                },
+                options: {
+                    legend: {
+                    position: "right"
+                    }
+                }
+            }))
 
-        let dataset_excl_coprod = {
-            backgroundColor : "#000040",
-            label: '# of domestic films',
-            data: [...top_countries.map(entry => entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
-        }
+            const N_2 = 15
 
-        let dataset_coprod = {
-            backgroundColor : "#0000ff",
-            label: '# of coproductions',
-            data: [...top_countries.map(entry => entry.films.length  - entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
-        }
+            let top_countries = countries.filter(country => country.name !== COUNTRY_COPRODUCTION).sort((a,b) => b.films.length - a.films.length).slice(0,N_2)
 
-        charts.push(plotBarChart($("#ctx4b"), top_countries.map(entry => entry.name), [dataset_excl_coprod, dataset_coprod], false, true))
+            let dataset_excl_coprod = {
+                backgroundColor : "#000040",
+                label: '# of domestic films',
+                data: [...top_countries.map(entry => entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
+            }
 
-        const N_3 = 8
-        let countries_by_avg_rating = countries.filter(country => country.films.length >= 2).sort((a,b) => b.avg_rating - a.avg_rating)
-        if (countries_by_avg_rating.length > N_3*2+1)
-            countries_by_avg_rating = [...countries_by_avg_rating.slice(0,N_3), {name: '...', avg_rating: 1}, ...countries_by_avg_rating.slice(-N_3)]
-        let dataset_avg = {
-            backgroundColor : COLOR_AVG,
-            label: 'Average Rating',
-            data: countries_by_avg_rating.map(entry => entry.avg_rating)
-        }
-        charts.push(plotBarChart($("#ctx4c"), countries_by_avg_rating.map(entry => entry.name), [dataset_avg], false))
+            let dataset_coprod = {
+                backgroundColor : "#0000ff",
+                label: '# of coproductions',
+                data: [...top_countries.map(entry => entry.films.length  - entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
+            }
 
-    })
+            bar_chart_cnt(top_countries.map(entry => entry.name), [dataset_excl_coprod, dataset_coprod], false, true)
+
+            const N_3 = 8
+            let countries_by_avg_rating = countries.filter(country => country.films.length >= 3).sort((a,b) => b.avg_rating - a.avg_rating)
+            if (countries_by_avg_rating.length > N_3*2+1)
+                countries_by_avg_rating = [...countries_by_avg_rating.slice(0,N_3), {name: '...', avg_rating: 1}, ...countries_by_avg_rating.slice(-N_3)]
+            let dataset_avg = {
+                backgroundColor : COLOR_AVG,
+                label: 'Average Rating',
+                data: countries_by_avg_rating.map(entry => entry.avg_rating)
+            }
+            bar_chart_avg(countries_by_avg_rating.map(entry => entry.name), [dataset_avg], false)
+        })
+    }
+}()
+
+function createChartHolder() {
+    let chart = null
+    return function (data) {
+        if (chart)
+            chart.destroy()
+        chart = data
+    }
 }
 
-function plotBarChart (ctx, labels, datasets, beginAtZero = true, stacked) {
-    let options = {
-        legend: {
-            display: datasets.length > 1
+function createBarChart (ctx) {
+    const chart = createChartHolder()
+    return function (labels, datasets, beginAtZero = true, stacked) {
+        let options = {
+            legend: {
+                display: datasets.length > 1
+            }
         }
-    }
-    if (!stacked && datasets.length === 2) {
-        datasets[0].xAxisID = 'A'
-        datasets[1].xAxisID = 'B'
-        options.scales = {
-            xAxes: [{
-              id: 'A',
-              type: 'linear',
-              position: 'top',
-              ticks: {
-                beginAtZero: beginAtZero
-              }
-            }, {
-              id: 'B',
-              type: 'linear',
-              position: 'bottom',
-              ticks: {
-                beginAtZero: beginAtZero
-              }
-            }]
-          }
-    } else {
-        options.scales = {
-            xAxes: [{
-                stacked: stacked,
+        if (!stacked && datasets.length === 2) {
+            datasets[0].xAxisID = 'A'
+            datasets[1].xAxisID = 'B'
+            options.scales = {
+                xAxes: [{
+                id: 'A',
                 type: 'linear',
+                position: 'top',
                 ticks: {
-                beginAtZero: beginAtZero
-              }
-            }],
-            yAxes: [{
-                 stacked: stacked
-            }]
-          }
-    }
+                    beginAtZero: beginAtZero
+                }
+                }, {
+                id: 'B',
+                type: 'linear',
+                position: 'bottom',
+                ticks: {
+                    beginAtZero: beginAtZero
+                }
+                }]
+            }
+        } else {
+            options.scales = {
+                xAxes: [{
+                    stacked: stacked,
+                    type: 'linear',
+                    ticks: {
+                    beginAtZero: beginAtZero
+                }
+                }],
+                yAxes: [{
+                    stacked: stacked
+                }]
+            }
+        }
 
-    return new Chart(ctx, {
-        type: 'horizontalBar',
-        data: {
-            labels: labels,
-            datasets: datasets
-        },
-        options: options
-    })
+        chart(new Chart(ctx, {
+            type: 'horizontalBar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: options
+        }))
+    }
 }
+
+function Director (name, films) {
+    this.name = name
+    this.films = films
+    this.film_cnt = films.length
+    let avg_rating = avg(films, getter("your_rating"))
+    this.score = Math.max(round((avg_rating - 5.5) * this.film_cnt, 1), 1, 0)
+    this.avg_rating = round(avg_rating, 1)
+}
+
+
+const createDirectorList = function () {
+    let data = []
+    return function (films) {
+        if (!films)
+            return data
+        let directors = {}
+        for (let film of films) {
+            if (film.directors) {
+                for (let director of film.directors.split(/,/)) {
+                    director = director.trim()
+                    if (directors[director]) {
+                        directors[director].push(film)
+                    } else {
+                        directors[director] = [film]
+                    }
+                }
+            }
+        }
+        return data = Object.entries(directors).map(entry => new Director(...entry)).filter(director => director.film_cnt >= 2)
+    }
+}()
 
 function Country (name, films = [], films_excl_coprod = []) {
     this.name = name
@@ -438,7 +515,7 @@ function Country (name, films = [], films_excl_coprod = []) {
 
 function createCountryList(films, map) {
     let result = {}
-    result[COPRODUCTION] = new Country(COPRODUCTION)
+    result[COUNTRY_COPRODUCTION] = new Country(COUNTRY_COPRODUCTION)
     for (let film of films) {
         let countries = map[film.title+";"+film.year]
         if (countries) {
@@ -451,31 +528,13 @@ function createCountryList(films, map) {
                     result[country] = new Country(country, [film]) 
                 }
             }
-            (countries.length === 1 ? result[countries[0]] : result[COPRODUCTION]).films_excl_coprod.push(film)
+            (countries.length === 1 ? result[countries[0]] : result[COUNTRY_COPRODUCTION]).films_excl_coprod.push(film)
         }
     }
     return valList(result)
 }
 
-function createDirectorList (data) {
-    let directors = {}
-    for (let film of data) {
-        if (film.directors) {
-            for (let director of film.directors.split(/,/)) {
-                director = director.trim()
-                if (directors[director]) {
-                    directors[director].films.push(film)
-                } else {
-                    directors[director] = {
-                        films : [film],
-                        name : director
-                    }
-                }
-            }
-        }
-    }
-    return valList(directors)
-}
+
 
 function decade (year) {
     let dec = year.match(/(\d\d\d)\d/)
