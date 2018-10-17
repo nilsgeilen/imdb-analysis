@@ -1,21 +1,23 @@
 <html>
-<meta charset="UTF-8">
+<meta charset="ISO-8859-1">
 
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
         crossorigin="anonymous">
-        <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon"  href="img/icon.png">
 </head>
 
 <body>
     <div class="container" >
-        <div>
-        <div class="page-header">
-            <h1>IMDb Rating Analysis</h1>
-            <p>by Nils Geilen</p>
+        <div class="mt-2">
+            <div class="page-header">
+                <img src="img/icon.png" style="float:left;" class="ml-2 mr-5 mt-3">
+                <h1>IMDb Rating Analysis</h1>
+                <p>by Nils Geilen</p>
+            </div>
         </div>
-    </div>
    
         <p>Several plots which explore different aspect of a user's IMDb ratings</p>
         <!-- <div class="panel panel-default">
@@ -37,7 +39,7 @@
         <p>
             Upload your own data, you can export your ratings from IMDb as "ratings.csv" or load sample data.
             <center>
-                <label class="btn btn-primary">
+                <label class="btn btn-outline-primary mr-5">
                     Upload Data <input type="file" id="fileinput" hidden>
                 </label>
                 <label class="btn btn-outline-info">
@@ -108,8 +110,8 @@
         <h4>Correlation between Runtime and Rating</h4>
         <p>
             This plot sets a films runtime in minutes in relation to its rating. Only movies and tv movies are considered, excluding tv series, documentaries etc.
-            <div style="width:600px; height:600px;" class="chart">
-                <canvas id="ctx3" width="600" height="600"></canvas>
+            <div style="width:800px; height:450px;" class="chart">
+                <canvas id="ctx3" width="800" height="450"></canvas>
             </div>
         </p>
 

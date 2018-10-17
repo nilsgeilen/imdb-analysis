@@ -2,7 +2,7 @@
 const COLOR_CNT = "blue"
 const COLOR_AVG = "red"
 const COLOR_RATING = "orange"
-const COLOR_SCORE = "#80ff00"
+const COLOR_SCORE = "#60e020"
 const COLOR_COPROD = "gray"
 const COLOR_OTHER = "gray"
 
@@ -11,6 +11,9 @@ const STD_COLORS = ["#ff8000", "#00ff80", "#ff0080", "#80ff00", "#0080ff", "#800
 
 const COUNTRY_COPRODUCTION = "coproduction"
 const COUNTRY_OTHER = "other"
+
+Chart.defaults.global.defaultFontSize = 16
+Chart.defaults.global.defaultFontColor = 'black'
 
 const getCountryData = function ()  {
     let data = null
@@ -293,32 +296,70 @@ function scatterRuntime(films) {
     let dataset = {
         backgroundColor : COLOR_RATING,
         label: 'Scatter Dataset',
-        data: []
+        data: [],
+        pointStyle : 'rectRounded',
+        pointRadius : 7.0,
+        pointHoverRadius : 7.0,
+        pointHitRadius : 7.0
     }
 
     for (let film of films) {
         dataset.data.push({x: film.runtime_mins, y: film.your_rating})
     }
 
+    let avg_len = Object.entries(groupBy (getter('your_rating')) (films)).map(([rating, films]) => ({
+        y: rating,
+        x: avg(films, getter('runtime_mins'))
+    }))
+
+    let dataset_avg = {
+        backgroundColor : COLOR_AVG,
+        borderColor: COLOR_AVG,
+        label: 'avg',
+        pointStyle : 'star',
+        pointRadius : 10.0,
+        pointHoverRadius :10.0,
+        pointHitRadius : 10.0,
+        data: avg_len
+    }
+
+
     let scatterChart = new Chart($("#ctx3"), {
         type: 'scatter',
         data: {
             labels: films.map(film => film.title),
-            datasets: [dataset]
+            datasets: [dataset, dataset_avg]
         },
         options: {
             scales: {
                 xAxes: [{
                     type: 'linear',
-                    position: 'bottom'
+                    position: 'bottom',
+                    scaleLabel: {
+                        display: true,
+                        labelString: 't [min]'
+                      }
+                }],
+                yAxes: [{
+                    type: 'linear',
+                    position: 'left',
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'rating'
+                      }
                 }]
+            },
+            legend: {
+                display: false
             },
             tooltips: {
                 callbacks: {
-                   label: function(tooltipItem, data) {
-                      var label = data.labels[tooltipItem.index];
-                      return label + ' (' + tooltipItem.xLabel + 'mins, rating:' + tooltipItem.yLabel + ')';
-                   }
+                    label: function(tooltipItem, data) {
+                        if (tooltipItem.datasetIndex)
+                            return "average runtime for rating " + tooltipItem.yLabel + ": " + round(tooltipItem.xLabel) + 'mins'
+                        var label = data.labels[tooltipItem.index];
+                        return label + ' (' + tooltipItem.xLabel + 'mins, rating:' + tooltipItem.yLabel + ')';
+                    }
                 }
              }
         }
