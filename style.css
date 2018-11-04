@@ -15,6 +15,12 @@ question {
 
 h4 {
     color: #4000d0;
+    margin-top: 4rem;
+    margin-bottom: 0px;
+}
+
+hr {
+    margin-top: 8px;
 }
 
 .container{
