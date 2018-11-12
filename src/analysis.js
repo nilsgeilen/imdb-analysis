@@ -84,6 +84,7 @@ function createStats(films) {
         $('#'+str+'_yar_txt').text(your_avg_rating)
         $('#'+str+'_iar_txt').text(round(avg(list, getter('imdb_rating')), 1))
     }
+    $('#formula_yar').text(round(avg(films, getter('your_rating')), 1))
 }
 
 const createTopDirectorChart = function () {
@@ -205,7 +206,9 @@ const displayDirectorStats = function () {
             }
         }))
 
-        let datasets_chrono = zip([top_10, STD_COLORS]).map(([director, color]) => ({
+        let l = directors.sort(comparator('film_cnt', 'desc')).slice(0,12)
+
+        let datasets_chrono = zip([l, STD_COLORS]).map(([director, color]) => ({
             label: director.name,
             data: director.films.sort((a, b) => b.year - a.year).map(film => ({ x: film.year, y: film.your_rating, title: film.title })),
             fill: false,

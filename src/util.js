@@ -81,10 +81,16 @@ function getter (field) {
     return obj => obj[field]
 }
 
-function comparator (field) {
-    if (field)
-        return (a, b) => a[field] - b[field]
-    else return (a, b) => a - b
+function comparator (field, order) {
+    if (order === 'desc') {
+        if (field)
+            return (a, b) => b[field] - a[field]
+        else return (a, b) => b - a
+    } else {
+        if (field)
+            return (a, b) => a[field] - b[field]
+        else return (a, b) => a - b
+    }
 }
 
 function emitter (list) {
