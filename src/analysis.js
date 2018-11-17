@@ -47,8 +47,20 @@ const visualizeData = function () {
     }
 }()
 
-function loadDataFromFile(evt) {
-    const file = evt.target.files[0]
+function loadSampleData() {
+    $.ajax({
+        url: 'data/examples/example.csv',
+        dataType: 'text',
+        type: "GET",
+        success: data => {
+            visualizeData(parseCsvWithHeader(data))
+            $('#reportArea').show()
+        },
+        error: (e1, e2, e3) => { alert(e1); alert(e2); alert(e3) }
+    })
+}
+
+function loadDataFromFile(file) {
     if (file) {
         let fr = new FileReader()
         fr.onload = e => {
@@ -61,7 +73,7 @@ function loadDataFromFile(evt) {
     }
 
 }
-document.getElementById('fileinput').addEventListener('change', loadDataFromFile, false)
+document.getElementById('fileinput').addEventListener('change', evt => loadDataFromFile(evt.target.files[0]), false)
 
 function displayFilmStats(films) {
     for (let film of films) {
@@ -79,10 +91,10 @@ function createStats(films) {
     ['tv', films.filter(film => film.title_type.match(/tvMovie/))],
     ['video', films.filter(film => film.title_type.match(/video/))]]
     for (let [str, list] of tuples) {
-        $('#'+str+'_cnt_txt').text(list.length)
+        $('#' + str + '_cnt_txt').text(list.length)
         let your_avg_rating = round(avg(list, getter('your_rating')), 1)
-        $('#'+str+'_yar_txt').text(your_avg_rating)
-        $('#'+str+'_iar_txt').text(round(avg(list, getter('imdb_rating')), 1))
+        $('#' + str + '_yar_txt').text(your_avg_rating)
+        $('#' + str + '_iar_txt').text(round(avg(list, getter('imdb_rating')), 1))
     }
     $('#formula_yar').text(round(avg(films, getter('your_rating')), 1))
 }
@@ -206,7 +218,7 @@ const displayDirectorStats = function () {
             }
         }))
 
-        let l = directors.sort(comparator('film_cnt', 'desc')).slice(0,12)
+        let l = directors.sort(comparator('film_cnt', 'desc')).slice(0, 12)
 
         let datasets_chrono = zip([l, STD_COLORS]).map(([director, color]) => ({
             label: director.name,
@@ -248,7 +260,9 @@ const displayDirectorStats = function () {
 
         const N_sigma = 6
 
-        let directors_sorted_by_avg_rating_diff = [...directors.slice(0, N_sigma), { name: '...', avg_rating_diff: 0 }, ...directors.slice(-N_sigma)]
+        let directors_sorted_by_avg_rating_diff = directors.length > N_sigma * 2 
+            ? [...directors.slice(0, N_sigma), { name: '...', avg_rating_diff: 0 }, ...directors.slice(-N_sigma)]
+            : directors
 
         let dataset = {
             backgroundColor: directors_sorted_by_avg_rating_diff.map(getter('avg_rating_diff')).map(val => val > 0 ? COLOR_POS : COLOR_NEG),
@@ -268,8 +282,8 @@ const displayDecadeStats = function () {
     return function (films) {
         let decades = createDecadeList(films)
 
-        const Director = createDirectorFactory()
-        let _decades = Object.keys(decades).sort().map(decade => new Director(decade, decades[decade]))
+        const factory = createStatObjFactory()
+        let _decades = Object.keys(decades).sort().map(decade => factory(decade, decades[decade]))
 
         console.log(_decades)
 
@@ -448,7 +462,7 @@ const displayCoutryStatsAsync = function () {
             let N_1 = 12
             N_1 = countries.length > N_1 ? N_1 : countries.length
             for (let i = 0; i < N_1; i++) {
-                if (countries[i].film_cnt === 1) {
+                if (countries[i].film_cnt <= 1) {
                     N_1 = i
                     break
                 }
@@ -572,15 +586,17 @@ function createBarChart(ctx) {
     }
 }
 
-function createDirectorFactory(AVG_RATING = 5.5) {
+function createStatObjFactory(AVG_RATING = 5.5) {
     return function (name, films) {
-        this.name = name
-        this.films = films
-        this.film_cnt = films.length
-        let avg_rating = avg(films, getter("your_rating"))
-        this.score = Math.max(round((avg_rating - AVG_RATING) * this.film_cnt, 1), 0)
-        this.avg_rating = round(avg_rating, 1)
-        this.avg_rating_diff = round(avg_rating - avg(films, getter('imdb_rating')), 1)
+        return new function () {
+            this.name = name
+            this.films = films
+            this.film_cnt = films.length
+            let avg_rating = avg(films, getter("your_rating"))
+            this.score = Math.max(round((avg_rating - AVG_RATING) * this.film_cnt, 1), 0)
+            this.avg_rating = round(avg_rating, 1)
+            this.avg_rating_diff = round(avg_rating - avg(films, getter('imdb_rating')), 1)
+        }
     }
 }
 
@@ -603,8 +619,8 @@ const createDirectorList = function () {
                 }
             }
         }
-        const Director = createDirectorFactory(avg(films, getter('your_rating')))
-        return data = Object.entries(directors).filter(([_, films]) => films.length >= 2).map(entry => new Director(...entry))
+        const factory = createStatObjFactory(avg(films, getter('your_rating')))
+        return data = Object.entries(directors).filter(([_, films]) => films.length >= 2).map(entry => factory(...entry))
     }
 }()
 
