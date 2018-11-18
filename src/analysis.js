@@ -588,7 +588,7 @@ function createBarChart(ctx) {
 
 function createStatObjFactory(AVG_RATING = 5.5) {
     return function (name, films) {
-        return new function () {
+        return Object.freeze(new function () {
             this.name = name
             this.films = films
             this.film_cnt = films.length
@@ -596,7 +596,7 @@ function createStatObjFactory(AVG_RATING = 5.5) {
             this.score = Math.max(round((avg_rating - AVG_RATING) * this.film_cnt, 1), 0)
             this.avg_rating = round(avg_rating, 1)
             this.avg_rating_diff = round(avg_rating - avg(films, getter('imdb_rating')), 1)
-        }
+        })
     }
 }
 
