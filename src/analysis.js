@@ -34,18 +34,16 @@ const getCountryData = function () {
     }
 }()
 
-const visualizeData = function () {
-    return function (films) {
-        films = films.filter(film => film.title_type && film.title_type.match(/movie|tvMovie|video/))
-        console.log(avg(films, getter('your_rating')))
-        displayCoutryStatsAsync(films)
-        createStats(films)
-        displayDecadeStats(films)
-        displayDirectorStats(films)
-        scatterRuntime(films)
-        displayFilmStats(films)
-    }
-}()
+function visualizeData(films) {
+    films = films.filter(film => film.title_type && film.title_type.match(/movie|tvMovie|video/))
+    displayCoutryStatsAsync(films)
+    createStats(films)
+    displayDecadeStats(films)
+    displayDirectorStats(films)
+    scatterRuntime(films)
+    displayFilmStats(films)
+}
+
 
 function loadSampleData() {
     $.ajax({
@@ -260,7 +258,7 @@ const displayDirectorStats = function () {
 
         const N_sigma = 6
 
-        let directors_sorted_by_avg_rating_diff = directors.length > N_sigma * 2 
+        let directors_sorted_by_avg_rating_diff = directors.length > N_sigma * 2
             ? [...directors.slice(0, N_sigma), { name: '...', avg_rating_diff: 0 }, ...directors.slice(-N_sigma)]
             : directors
 
@@ -513,12 +511,13 @@ const displayCoutryStatsAsync = function () {
             let countries_by_avg_rating = countries.filter(country => country.films.length >= 3).sort((a, b) => b.avg_rating - a.avg_rating)
             if (countries_by_avg_rating.length > N_3 * 2 + 1)
                 countries_by_avg_rating = [...countries_by_avg_rating.slice(0, N_3), { name: '...', avg_rating: 1 }, ...countries_by_avg_rating.slice(-N_3)]
+
             let dataset_avg = {
                 backgroundColor: COLOR_AVG,
                 label: 'average rating',
                 data: countries_by_avg_rating.map(entry => entry.avg_rating)
             }
-            bar_chart_avg(countries_by_avg_rating.map(entry => entry.name), [dataset_avg], false)
+            bar_chart_avg(countries_by_avg_rating.map(entry => entry.name), [dataset_avg], 1)
         })
     }
 }()
@@ -534,12 +533,13 @@ function createChartHolder() {
 
 function createBarChart(ctx) {
     const chart = createChartHolder()
-    return function (labels, datasets, beginAtZero = true, stacked) {
+    return function (labels, datasets, beginAt = 0, stacked) {
         let options = {
             legend: {
                 display: datasets.length > 1
             }
         }
+        let ticks = beginAt === false ? {} : { suggestedMin: beginAt }
         if (!stacked && datasets.length === 2) {
             datasets[0].xAxisID = 'A'
             datasets[1].xAxisID = 'B'
@@ -548,16 +548,12 @@ function createBarChart(ctx) {
                     id: 'A',
                     type: 'linear',
                     position: 'top',
-                    ticks: {
-                        beginAtZero: beginAtZero
-                    }
+                    ticks: ticks
                 }, {
                     id: 'B',
                     type: 'linear',
                     position: 'bottom',
-                    ticks: {
-                        beginAtZero: beginAtZero
-                    }
+                    ticks: ticks
                 }]
             }
         } else {
@@ -565,9 +561,7 @@ function createBarChart(ctx) {
                 xAxes: [{
                     stacked: stacked,
                     type: 'linear',
-                    ticks: {
-                        beginAtZero: beginAtZero
-                    }
+                    ticks: ticks
                 }],
                 yAxes: [{
                     stacked: stacked
