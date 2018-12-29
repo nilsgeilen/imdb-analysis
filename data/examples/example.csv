@@ -1,16 +1,17 @@
 Const,Your Rating,Date Rated,Title,URL,Title Type,IMDb Rating,Runtime (mins),Year,Genres,Num Votes,Release Date,Directors
-tt0110912,9,2016-06-19,Pulp Fiction,https://www.imdb.com/title/tt0110912/,movie,8.9,154,1994,"Crime, Drama",1571859,1994-05-21,Quentin Tarantino
-tt0118715,9,2016-06-19,The Big Lebowski,https://www.imdb.com/title/tt0118715/,movie,8.1,117,1998,"Comedy, Crime",637226,1998-02-15,"Ethan Coen, Joel Coen"
-tt0138524,6,2018-11-10,Intolerable Cruelty,https://www.imdb.com/title/tt0138524/,movie,6.3,100,2003,"Comedy, Crime, Romance",83750,2003-09-02,"Ethan Coen, Joel Coen"
-tt1390411,5,2016-07-05,In the Heart of the Sea,https://www.imdb.com/title/tt1390411/,movie,6.9,122,2015,"Action, Adventure, Biography, Drama, History, Thriller",104473,2015-12-02,Ron Howard
-tt1853728,8,2016-06-19,Django Unchained,https://www.imdb.com/title/tt1853728/,movie,8.4,165,2012,"Drama, Western",1160879,2012-12-11,Quentin Tarantino
-tt1856101,9,2017-10-05,Blade Runner 2049,https://www.imdb.com/title/tt1856101/,movie,8.0,164,2017,"Drama, Mystery, Sci-Fi, Thriller",341773,2017-10-03,Denis Villeneuve
-tt2543164,9,2016-11-27,Arrival,https://www.imdb.com/title/tt2543164/,movie,7.9,116,2016,"Drama, Mystery, Sci-Fi, Thriller",477366,2016-09-01,Denis Villeneuve
-tt3062096,4,2016-10-13,Inferno,https://www.imdb.com/title/tt3062096/,movie,6.2,121,2016,"Action, Adventure, Crime, Drama, Mystery, Thriller",130705,2016-10-08,Ron Howard
-tt3460252,7,2016-06-20,The Hateful Eight,https://www.imdb.com/title/tt3460252/,movie,7.8,187,2015,"Crime, Drama, Mystery, Thriller, Western",408366,2015-12-07,Quentin Tarantino
-tt0361748,8,2018-09-30,Inglourious Basterds,https://www.imdb.com/title/tt0361748/,movie,8.3,153,2009,"Adventure, Drama, War",1073162,2009-05-20,"Quentin Tarantino, Eli Roth"
-tt0382625,3,2016-07-13,The Da Vinci Code,https://www.imdb.com/title/tt0382625/,movie,6.6,149,2006,"Mystery, Thriller",361813,2006-05-17,Ron Howard
-tt0401792,9,2016-06-19,Sin City,https://www.imdb.com/title/tt0401792/,movie,8.0,124,2005,"Crime, Thriller",706164,2005-03-28,"Frank Miller, Quentin Tarantino, Robert Rodriguez"
-tt0475290,5,2016-06-21,"Hail, Caesar!",https://www.imdb.com/title/tt0475290/,movie,6.3,106,2016,"Comedy, Mystery",106305,2016-02-01,"Ethan Coen, Joel Coen"
-tt5013056,8,2017-08-01,Dunkirk,https://www.imdb.com/title/tt5013056/,movie,7.9,106,2017,"Action, Drama, History, Thriller, War",427223,2017-07-13,Christopher Nolan
-tt0816692,2,2016-06-19,Interstellar,https://www.imdb.com/title/tt0816692/,movie,8.6,169,2014,"Adventure, Drama, Sci-Fi",1224962,2014-10-26,Christopher Nolan
+tt0110912,9,2016-06-19,Pulp Fiction,https://www.imdb.com/title/tt0110912/,movie,8.9,154,1994,"Crime, Drama",1584621,1994-05-21,Quentin Tarantino
+tt0118715,9,2016-06-19,The Big Lebowski,https://www.imdb.com/title/tt0118715/,movie,8.1,117,1998,"Comedy, Crime",642806,1998-02-15,"Ethan Coen, Joel Coen"
+tt0138524,6,2018-11-10,Intolerable Cruelty,https://www.imdb.com/title/tt0138524/,movie,6.3,100,2003,"Comedy, Crime, Romance",84199,2003-09-02,"Ethan Coen, Joel Coen"
+tt1390411,5,2016-07-05,In the Heart of the Sea,https://www.imdb.com/title/tt1390411/,movie,6.9,122,2015,"Action, Adventure, Biography, Drama, History, Thriller",105293,2015-12-02,Ron Howard
+tt1853728,8,2016-06-19,Django Unchained,https://www.imdb.com/title/tt1853728/,movie,8.4,165,2012,"Drama, Western",1170136,2012-12-11,Quentin Tarantino
+tt1856101,9,2017-10-05,Blade Runner 2049,https://www.imdb.com/title/tt1856101/,movie,8.0,164,2017,"Drama, Mystery, Sci-Fi, Thriller",350631,2017-10-03,Denis Villeneuve
+tt2543164,9,2016-11-27,Arrival,https://www.imdb.com/title/tt2543164/,movie,7.9,116,2016,"Drama, Mystery, Sci-Fi, Thriller",484840,2016-09-01,Denis Villeneuve
+tt3062096,4,2016-10-13,Inferno,https://www.imdb.com/title/tt3062096/,movie,6.2,121,2016,"Action, Adventure, Crime, Drama, Mystery, Thriller",132491,2016-10-08,Ron Howard
+tt3460252,7,2016-06-20,The Hateful Eight,https://www.imdb.com/title/tt3460252/,movie,7.8,187,2015,"Crime, Drama, Mystery, Thriller, Western",412923,2015-12-07,Quentin Tarantino
+tt0361748,8,2018-09-30,Inglourious Basterds,https://www.imdb.com/title/tt0361748/,movie,8.3,153,2009,"Adventure, Drama, War",1082067,2009-05-20,"Quentin Tarantino, Eli Roth"
+tt0382625,3,2016-07-13,The Da Vinci Code,https://www.imdb.com/title/tt0382625/,movie,6.6,149,2006,"Mystery, Thriller",363699,2006-05-17,Ron Howard
+tt0401792,9,2016-06-19,Sin City,https://www.imdb.com/title/tt0401792/,movie,8.0,124,2005,"Crime, Thriller",707938,2005-03-28,"Frank Miller, Quentin Tarantino, Robert Rodriguez"
+tt0475290,5,2016-06-21,"Hail, Caesar!",https://www.imdb.com/title/tt0475290/,movie,6.3,106,2016,"Comedy, Mystery",107704,2016-02-01,"Ethan Coen, Joel Coen"
+tt5013056,8,2017-08-01,Dunkirk,https://www.imdb.com/title/tt5013056/,movie,7.9,106,2017,"Action, Drama, History, Thriller, War",435001,2017-07-13,Christopher Nolan
+tt6412452,8,2018-11-24,The Ballad of Buster Scruggs,https://www.imdb.com/title/tt6412452/,movie,7.4,133,2018,"Comedy, Drama, Musical, Mystery, Romance, Western",44884,2018-08-31,"Ethan Coen, Joel Coen"
+tt0816692,2,2016-06-19,Interstellar,https://www.imdb.com/title/tt0816692/,movie,8.6,169,2014,"Adventure, Drama, Sci-Fi",1239040,2014-10-26,Christopher Nolan
