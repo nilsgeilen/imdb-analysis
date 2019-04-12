@@ -13,12 +13,14 @@ function sum (list, field) {
 function argmax (fn) {
     return (list) => {
         if (list.length === 0)
-            return null
+            return []
 
-        let result = list[0]
+        let result = [list[0]]
         for (let i = 1; i < list.length; i++) {
-            if (fn(list[i], result) > 0)
-                result = list[i]
+            if (fn(list[i], result[0]) === 0)
+                result.push(list[i])
+            if (fn(list[i], result[0]) > 0)
+                result = [list[i]]
         }
         return result
     }
@@ -27,12 +29,14 @@ function argmax (fn) {
 function argmin (fn) {
     return (list) => {
         if (list.length === 0)
-            return null
+            return []
 
-        let result = list[0]
+        let result = [list[0]]
         for (let i = 1; i < list.length; i++) {
-            if (fn(list[i], result) < 0)
-                result = list[i]
+            if (fn(list[i], result[0]) === 0)
+                result.push(list[i])
+            if (fn(list[i], result[0]) < 0)
+                result = [list[i]]
         }
         return result
     }

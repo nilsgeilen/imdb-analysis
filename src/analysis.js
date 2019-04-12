@@ -144,7 +144,7 @@ const displayDirectorStats = function () {
 
         let top_diff = directors.map(director => ({
             director: director,
-            diff: argmax(comparator('your_rating'))(director.films).your_rating - argmin(comparator('your_rating'))(director.films).your_rating
+            diff: argmax(comparator('your_rating'))(director.films)[0].your_rating - argmin(comparator('your_rating'))(director.films)[0].your_rating
         })).sort((a, b) => b.diff - a.diff).slice(0, N_delta).map(x => ({
             name: x.director.name,
             diff: x.diff,
@@ -518,6 +518,8 @@ const displayCoutryStatsAsync = function () {
                 data: countries_by_avg_rating.map(entry => entry.avg_rating)
             }
             bar_chart_avg(countries_by_avg_rating.map(entry => entry.name), [dataset_avg], 1)
+
+            createMap(countries)
         })
     }
 }()

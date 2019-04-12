@@ -4,10 +4,13 @@
 <head>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
-        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="img/icon.png">
+
+
+
     <meta charset="utf-8">
 </head>
 
@@ -24,7 +27,8 @@
 
         <p>
             Several plots which explore different aspect of a user's IMDb ratings.
-            There are for example plots which analyse your favourite directors or show statistics comparing different countries.
+            There are for example plots which analyse your favourite directors or show statistics comparing different
+            countries.
         </p>
 
         <p>
@@ -43,10 +47,24 @@
         </p>
 
         <div id="reportArea" style="display:none">
+            <h4>Content</h4>
+            <div id="content"></div>
+            <script>
+                $(document).ready(() => {
+                    let i = 0;
+                    for (const elem of $('h4').slice(1)) {
+                        $(elem).attr('id', 'u' + ++i)
+                        $(elem).html(i + '&nbsp;&nbsp;&nbsp;' + $(elem).text())
+                        $('#content').append('<br>&nbsp;&nbsp;&nbsp;<a href="#' + $(elem).attr('id') + '">' + $(elem).text() + '</a>')
+                    }
+                })
+            </script>
+
             <h4>Statistics</h4>
             <hr>
             <p>
-                This analysis concentrates itself on items of the categries <i>movie</i>, <i>tv movie</i> and <i>video</i>,
+                This analysis concentrates itself on items of the categries <i>movie</i>, <i>tv movie</i> and
+                <i>video</i>,
                 which refer to films shown in cimena, those produced for television and those which are release
                 direct-to-dvd respectively.
                 Thereby it excludes tv series, documentries etc.
@@ -120,8 +138,10 @@
                 <question>Which are your favourite directors?</question>
                 This chart lists the top ten directors according to their score. Alternatively directors can be sorted
                 by the number of their films which you have rated or the average rating you gave their films.
-                For all diagrams in this chapter, directors with only asingle rating are excluded, therefore only directors with at least two rated film are considered for the ranking.
-                The score for a director <i>d</i> is computed in the following way, where <i>a</i> = <span id="formula_yar"></span>
+                For all diagrams in this chapter, directors with only asingle rating are excluded, therefore only
+                directors with at least two rated film are considered for the ranking.
+                The score for a director <i>d</i> is computed in the following way, where <i>a</i> = <span
+                    id="formula_yar"></span>
                 is your average rating and <i>R<sub>d</sub></i> denotes
                 all of your ratings for films by director <i>d</i>:
                 <center><img src='img/formula.png' width='200'></center>
@@ -158,7 +178,8 @@
 
             <p>
                 <question>On which directors do you disagree with IMDb?</question>
-                Lists the directors where your average ratings differ most from IMDb's average ratings for these directors.
+                Lists the directors where your average ratings differ most from IMDb's average ratings for these
+                directors.
                 Shows both overrated and underrated directors.
                 <div style="width:600px; height:350px;" class="chart">
                     <canvas id="ctx1d" width="600" height="350"></canvas>
@@ -178,7 +199,8 @@
 
             <p>
                 <question>Which decades do you rate higher or lower than IMDb?</question>
-                This chart shows Hhwo your average ratings for different decades differ from IMDb's average ratings for these decades.
+                This chart shows Hhwo your average ratings for different decades differ from IMDb's average ratings for
+                these decades.
                 <div style="width:800px; height:300px;" class="chart">
                     <canvas id="ctx2b" width="800" height="300"></canvas>
                 </div>
@@ -196,6 +218,10 @@
 
             <h4>Comparision of Countries</h4>
             <hr>
+            <p>
+                <div id="map_cnt" style="position: relative; width: 800px; height: 500px;"></div>
+                <div id="map_avg" style="position: relative; width: 800px; height: 500px;"></div>
+            </p>
             <p>
                 <question>Which countries produce the films you watch?</question>
                 This pie chart breaks down the number of ratings for film produced in different countries.
@@ -215,7 +241,8 @@
             <p>
                 <question>Which countries produce the best or the worst films?</question>
                 This chart orders countries according to their average rating. Coproductions count fully for all
-                envolved countries and only countries with at least three rated films including coproductions are considered.
+                envolved countries and only countries with at least three rated films including coproductions are
+                considered.
                 <div style="width:600px; height:450px;" class="chart">
                     <canvas id="ctx4c" width="600" height="450"></canvas>
                 </div>
@@ -225,6 +252,10 @@
     </div>
 
     <script src="lib/Chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
+    <script src="lib/datamaps.world.min.js"></script>
+    <script src="src/geomap.js"></script>
     <script src="src/parse_csv.js"></script>
     <script src="src/analysis.js"></script>
     <script src="src/util.js"></script>
