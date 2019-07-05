@@ -137,6 +137,10 @@ const createDirectorRatingDiffChart = function () {
         const N_delta = large ? 10 : 5
 
         $('#button-ambiguous').text(large ? "less ..." : "more ...")
+        $('#chart-ambiguous').height(large ? 550 : 300).html(large
+            ? '<canvas id="ctx1b" width="800" height="550"></canvas>'
+            : '<canvas id="ctx1b" width="800" height="300"></canvas>'
+        )
 
         let top_diff = directors.map(director => ({
             director: director,
