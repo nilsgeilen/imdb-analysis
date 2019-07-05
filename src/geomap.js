@@ -26,7 +26,7 @@ function createMap(countries) {
         if (flop.length && flop[0].your_rating < 5.5)
             tooltip += highlight("<br>flop: ") + flop.map(getter('title')).join(', ')
         series_cnt.push(createCountryData(getCountryCode(country.name), Math.log10(country.films.length + 1), tooltip))
-        series_avg.push(createCountryData(getCountryCode(country.name), country.avg_rating, tooltip))
+        series_avg.push(createCountryData(getCountryCode(country.name), country.avg_rating * country.avg_rating, tooltip))
     }
 
     paintWorldMap($('#map_cnt'), series_cnt, COLOR_CNT)
