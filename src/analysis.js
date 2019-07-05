@@ -128,19 +128,15 @@ const createTopDirectorChart = function () {
     }
 }()
 
-const displayDirectorStats = function () {
+const createDirectorRatingDiffChart = function () {
     const rating_diff_chart = createChartHolder()
-    const time_chart = createChartHolder()
-    const avg_rating_diff_chart = createBarChart($("#ctx1d"))
-    return function (films, N = 10) {
-        let directors = createDirectorList(films)
+    let enlarged = true
+    return function (large = !enlarged, directors = createDirectorList()) {
+        enlarged = large
 
+        const N_delta = large ? 10 : 5
 
-        createTopDirectorChart(directors)
-
-        let top_10 = directors.sort((a, b) => b.score - a.score).slice(0, N)
-
-        const N_delta = 5
+        $('#button-ambiguous').text(large ? "less ..." : "more ...")
 
         let top_diff = directors.map(director => ({
             director: director,
@@ -182,7 +178,7 @@ const displayDirectorStats = function () {
             pointHitRadius: 10.0
         }])
 
-        console.log(datasets)
+        // console.log(datasets)
 
         rating_diff_chart(new Chart($("#ctx1b"), {
             type: 'line',
@@ -215,6 +211,21 @@ const displayDirectorStats = function () {
                 }
             }
         }))
+    }
+}()
+
+const displayDirectorStats = function () {
+    const time_chart = createChartHolder()
+    const avg_rating_diff_chart = createBarChart($("#ctx1d"))
+    return function (films, N = 10) {
+        let directors = createDirectorList(films)
+
+
+        createTopDirectorChart(directors)
+
+        let top_10 = directors.sort((a, b) => b.score - a.score).slice(0, N)
+
+        createDirectorRatingDiffChart(false, directors)
 
         let l = directors.sort(comparator('film_cnt', 'desc')).slice(0, 12)
 

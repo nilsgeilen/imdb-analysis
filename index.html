@@ -171,9 +171,12 @@
                 <question>Which directors do you feel most ambiguous about?</question>
                 This chart shows the directors with the largest disparities between the lowest and the highest rating
                 for two of their films, i.e. max(<i>R<sub>d</sub></i>) - min(<i>R<sub>d</sub></i>).
-                <div style="width:800px; height:300px;" class="chart">
+                <div id="chart-ambiguous" style="width:800px; height:300px;" class="chart">
                     <canvas id="ctx1b" width="800" height="300"></canvas>
                 </div>
+                <center>
+                    <button id="button-ambiguous" class="btn btn-outline-secondary" onclick="createDirectorRatingDiffChart()">more ...</button>
+                </center>
             </p>
 
             <p>
