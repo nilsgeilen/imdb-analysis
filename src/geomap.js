@@ -19,13 +19,13 @@ function createMap(countries) {
         let tooltip = highlight("# of domestic films: " + colorize(COLOR_CNT)(country.film_cnt)
             + "<br># of coproductions: " + colorize(COLOR_CNT)(country.films.length - country.film_cnt)
             + "<br>⌀ rating: " + colorize(COLOR_AVG)(country.avg_rating))
-        const top = argmax(comparator("your_rating"))(country.films)
+        const top = argmax(comparator("your_rating"))(country.films_main)
         if (top.length && top[0].your_rating > 5.5)
             tooltip += highlight("<br>top: ") + top.map(getter('title')).join(', ')
-        const flop = argmin(comparator("your_rating"))(country.films)
+        const flop = argmin(comparator("your_rating"))(country.films_main)
         if (flop.length && flop[0].your_rating < 5.5)
             tooltip += highlight("<br>flop: ") + flop.map(getter('title')).join(', ')
-        series_cnt.push(createCountryData(getCountryCode(country.name), Math.log10(country.films.length + 1), tooltip))
+        series_cnt.push(createCountryData(getCountryCode(country.name), Math.log10(country.films_main.length + 1), tooltip))
         series_avg.push(createCountryData(getCountryCode(country.name), country.avg_rating * country.avg_rating, tooltip))
     }
 

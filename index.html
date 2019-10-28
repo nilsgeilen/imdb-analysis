@@ -3,7 +3,7 @@
 
 <head>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
         integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="style.css">
@@ -169,8 +169,8 @@
             </p>
             <p>
                 <question>Which directors do you feel most ambiguous about?</question>
-                This chart shows the directors with the largest disparities between the lowest and the highest rating
-                for two of their films, i.e. max(<i>R<sub>d</sub></i>) - min(<i>R<sub>d</sub></i>).
+                This chart orders directors by the variance σ<sup>2</sup> of their film's rating. It additionally shows the average rating μ and the difference δ between the best and worst rating.
+                <center><img src='img/formula-variance.png' width='230'></center>
                 <div id="chart-ambiguous" style="width:800px; height:300px;" class="chart">
                     <canvas id="ctx1b" width="800" height="300"></canvas>
                 </div>
@@ -228,7 +228,8 @@
             <p>
                 <question>Which countries produce the films you watch?</question>
                 This pie chart breaks down the number of ratings for film produced in different countries.
-                Coproductions are handled as their own category.
+                Coproductions are handled as their own category, internally further split into those where the country is the main producer and those where it is one of the minor producers.
+                The country which IMDb lists first is counted as the main producer.
                 <div style="width:600px; height:400px;" class="chart">
                     <canvas id="ctx4" width="600" height="400"></canvas>
                 </div>

@@ -41,7 +41,7 @@ function visualizeData(films) {
     displayDecadeStats(films)
     displayDirectorStats(films)
     scatterRuntime(films)
-    displayFilmStats(films)
+    // displayFilmStats(films)
 }
 
 
@@ -73,15 +73,15 @@ function loadDataFromFile(file) {
 }
 document.getElementById('fileinput').addEventListener('change', evt => loadDataFromFile(evt.target.files[0]), false)
 
-function displayFilmStats(films) {
-    for (let film of films) {
-        film.rating_diff = film.your_rating - film.imdb_rating
-    }
+// function displayFilmStats(films) {
+//     for (let film of films) {
+//         film.rating_diff = film.your_rating - film.imdb_rating
+//     }
 
-    films.sort((a, b) => b.rating_diff - a.rating_diff)
+//     films.sort((a, b) => b.rating_diff - a.rating_diff)
 
-    console.log(films)
-}
+//    // console.log(films)
+// }
 
 function createStats(films) {
     let tuples = [['sum', films],
@@ -142,14 +142,12 @@ const createDirectorRatingDiffChart = function () {
             : '<canvas id="ctx1b" width="800" height="300"></canvas>'
         )
 
-        let top_diff = directors.map(director => ({
-            director: director,
-            diff: argmax(comparator('your_rating'))(director.films)[0].your_rating - argmin(comparator('your_rating'))(director.films)[0].your_rating
-        })).sort((a, b) => b.diff - a.diff).slice(0, N_delta).map(x => ({
-            name: x.director.name,
-            diff: x.diff,
-            avg_rating: x.director.avg_rating,
-            films: Object.entries(groupBy(getter('your_rating'))(x.director.films)).sort((a, b) => b[0] - a[0]).map(entry => ({
+        let top_diff = directors.sort((a, b) => b.variance - a.variance).slice(0, N_delta).map(x => ({
+            name: x.name,
+            delta: x.diff,
+            mu: x.avg_rating,
+            sigma_square: x.variance,
+            films: Object.entries(groupBy(getter('your_rating'))(x.films)).sort((a, b) => b[0] - a[0]).map(entry => ({
                 your_rating: entry[0],
                 title: entry[1].map(film => film.title).join(', '),
                 film_cnt: entry[1].length
@@ -171,7 +169,7 @@ const createDirectorRatingDiffChart = function () {
             }
         }).concat([{
             //label: elem.director.name,
-            data: top_diff.map(elem => ({ x: elem.avg_rating, y: elem.name, title: elem.name + ' (δ = ' + elem.diff + ')' })),
+            data: top_diff.map(elem => ({ x: elem.mu, y: elem.name, title: elem.name + ' (μ = ' + elem.mu + ', δ = ' + elem.delta + ', σ^2 = ' + elem.sigma_square + ')' })),
             fill: false,
             showLine: false,
             borderColor: COLOR_AVG,
@@ -298,7 +296,7 @@ const displayDecadeStats = function () {
         const factory = createStatObjFactory()
         let _decades = Object.keys(decades).sort().map(decade => factory(decade, decades[decade]))
 
-        console.log(_decades)
+      //  console.log(_decades)
 
         let dataset1 = {
             backgroundColor: "blue",
@@ -461,6 +459,8 @@ const displayCoutryStatsAsync = function () {
 
             console.log(countries)
 
+        //    let factory = createStatObjFactory();
+
             for (let country of countries) {
                 if (!country.films) {
                     console.log("Country has no films: " + country.name)
@@ -509,18 +509,24 @@ const displayCoutryStatsAsync = function () {
             let top_countries = countries.filter(country => country.name !== COUNTRY_COPRODUCTION).sort((a, b) => b.films.length - a.films.length).slice(0, N_2)
 
             let dataset_excl_coprod = {
-                backgroundColor: "#000040",
+                backgroundColor: "#000030",
                 label: '# of domestic films',
                 data: [...top_countries.map(entry => entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
             }
 
-            let dataset_coprod = {
-                backgroundColor: "#0000ff",
-                label: '# of coproductions',
-                data: [...top_countries.map(entry => entry.films.length - entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
+            let dataset_coprod_main = {
+                backgroundColor: "#0000a0",
+                label: '# of coproductions (main)',
+                data: [...top_countries.map(entry => entry.films_main.length - entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
             }
 
-            bar_chart_cnt(top_countries.map(entry => entry.name), [dataset_excl_coprod, dataset_coprod], false, true)
+            let dataset_coprod = {
+                backgroundColor: "#0000ff",
+                label: '# of coproductions (minor)',
+                data: [...top_countries.map(entry => entry.films.length - entry.films_main.length), sum(countries.slice(N_2), getter("film_cnt"))]
+            }
+
+            bar_chart_cnt(top_countries.map(entry => entry.name), [dataset_excl_coprod, dataset_coprod_main, dataset_coprod], false, true)
 
             const N_3 = 8
             let countries_by_avg_rating = countries.filter(country => country.films.length >= 3).sort((a, b) => b.avg_rating - a.avg_rating)
@@ -607,6 +613,8 @@ function createStatObjFactory(AVG_RATING = 5.5) {
             this.score = Math.max(round((avg_rating - AVG_RATING) * this.film_cnt, 1), 0)
             this.avg_rating = round(avg_rating, 1)
             this.avg_rating_diff = round(avg_rating - avg(films, getter('imdb_rating')), 1)
+            this.variance = round(sum(films, film => Math.pow(film.your_rating - avg_rating, 2)) / films.length, 1)
+            this.diff = round(argmax(comparator('your_rating'))(films)[0].your_rating - argmin(comparator('your_rating'))(films)[0].your_rating, 1)
         })
     }
 }
@@ -639,6 +647,7 @@ function Country(name, films = [], films_excl_coprod = []) {
     this.name = name
     this.films = films
     this.films_excl_coprod = films_excl_coprod
+    this.films_main = []
 }
 
 function createCountryList(films, map) {
@@ -648,12 +657,17 @@ function createCountryList(films, map) {
         let countries = map[film.title + ";" + film.year]
         if (countries) {
             countries = countries.split(/,/)
+            let first = true
             for (let country of countries) {
                 country = country.trim()
                 if (result[country]) {
                     result[country].films.push(film)
                 } else {
                     result[country] = new Country(country, [film])
+                }
+                if (first) {
+                    first = false
+                    result[country].films_main.push(film)
                 }
             }
             (countries.length === 1 ? result[countries[0]] : result[COUNTRY_COPRODUCTION]).films_excl_coprod.push(film)
