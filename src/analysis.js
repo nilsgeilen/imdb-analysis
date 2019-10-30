@@ -515,13 +515,13 @@ const displayCoutryStatsAsync = function () {
             }
 
             let dataset_coprod_main = {
-                backgroundColor: "#0000a0",
+                backgroundColor: "#4444ff",
                 label: '# of coproductions (main)',
                 data: [...top_countries.map(entry => entry.films_main.length - entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
             }
 
             let dataset_coprod = {
-                backgroundColor: "#0000ff",
+                backgroundColor: "#aaaaff",
                 label: '# of coproductions (minor)',
                 data: [...top_countries.map(entry => entry.films.length - entry.films_main.length), sum(countries.slice(N_2), getter("film_cnt"))]
             }
