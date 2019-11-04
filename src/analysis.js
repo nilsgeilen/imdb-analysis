@@ -229,7 +229,7 @@ const displayDirectorStats = function () {
 
         createDirectorRatingDiffChart(false, directors)
 
-        let l = directors.sort(comparator('film_cnt', 'desc')).slice(0, 12)
+        let l = directors.sort((a, b) => b.film_cnt * 1000 - a.film_cnt * 1000 + b.avg_rating - a.avg_rating).slice(0, 12)
 
         let datasets_chrono = zip([l, STD_COLORS]).map(([director, color]) => ({
             label: director.name,
