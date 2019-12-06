@@ -2,8 +2,10 @@
 // cannot handle neither single quotes nor escaped quotes but works fine for this cause
 function parseLine (line, sep) {
     let cells = line.match(new RegExp(`[^${sep}"]*${sep}|"[^"]*"${sep}|[^${sep}"]*$|"[^"]*"$`, "g"))
-    if (cells)
+    if (cells) {
+        cells.pop()
         return cells.map(s => s.replace(/^"|[",]+$/g, ""))
+    }
     else return null
 }
 
@@ -16,7 +18,9 @@ function parseCsvWithHeader (source, sep = ',') {
         let cols = parseLine(row, sep)
         if (cols) {
             for (let i = 0; i < cols.length; i++) {
-                obj[headers[i]] = cols[i]
+                if (headers[i]) {
+                    obj[headers[i]] = cols[i]
+                }
             }
             results.push(obj)
         }

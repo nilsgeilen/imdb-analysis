@@ -35,12 +35,18 @@ const getCountryData = function () {
 }()
 
 function visualizeData(films) {
+    // for (let film of films)
+    // if(film.genres)
+    //     film.genres = film.genres.split(/,\s*/);
+    //     else console.log(film)
     films = films.filter(film => film.title_type && film.title_type.match(/movie|tvMovie|video/))
+    console.log(films)
     displayCoutryStatsAsync(films)
     createStats(films)
     displayDecadeStats(films)
     displayDirectorStats(films)
     scatterRuntime(films)
+    displayGenreStats(films)
     // displayFilmStats(films)
 }
 
@@ -447,6 +453,45 @@ const scatterRuntime = function () {
     }
 }()
 
+function displayGenreTopList(genres = createGenreList(), N = 10) {
+    const select = $("#select_sorting_genre_top_list")
+    let genre = select.val()
+    for (let elem of genres) {
+        if (elem.name === genre) {
+            genre = elem
+            break
+        }
+    }
+
+    if (!genre.films)
+        return
+
+    const genre_top_list = $("#genre_top_list")
+    genre_top_list.empty()
+
+    let films = genre.films.sort(comparator("your_rating", "desc")).slice(0, N)
+
+    for (let film of films) {
+        genre_top_list.append("<tr>" +
+            "<td style='color:#"+ (10-film.your_rating) + "0" + (film.your_rating - 1) + "000'><b>" + film.your_rating + "</b></td>" + 
+            "<td>" + film.title + "</td>" +
+            "<td>" + film.directors + "</td>" +
+            "<td>" + film.year + "</td>" +
+            "</tr>")
+    }
+}
+
+function displayGenreStats(films) {
+    const genres = createGenreList(films)
+
+    const select = $("#select_sorting_genre_top_list")
+    for (let genre of genres.map(getter("name")).sort()) {
+        select.append('<option value="' + genre + '">' + genre + '</option>')
+    }
+
+    displayGenreTopList(genres)
+}
+
 const displayCoutryStatsAsync = function () {
     const pie_chart = createChartHolder()
     const bar_chart_cnt = createBarChart($("#ctx4b"))
@@ -619,6 +664,23 @@ function createStatObjFactory(AVG_RATING = 5.5) {
     }
 }
 
+const createGenreList = function() {
+    let data = []
+    return function(films) {
+        if (!films)
+            return data
+        let genres = {}
+        for (let film of films) {
+            if (film.genres) {
+                for (let genre of film.genres.split(/\s*,\s*/)) {
+                    (genres[genre] || (genres[genre] = [])).push(film)
+                }
+            }
+        }
+        const factory = createStatObjFactory()
+        return data = Object.entries(genres).map(entry => factory(...entry))
+    }
+}() 
 
 const createDirectorList = function () {
     let data = []
@@ -628,13 +690,8 @@ const createDirectorList = function () {
         let directors = {}
         for (let film of films) {
             if (film.directors) {
-                for (let director of film.directors.split(/,/)) {
-                    director = director.trim()
-                    if (directors[director]) {
-                        directors[director].push(film)
-                    } else {
-                        directors[director] = [film]
-                    }
+                for (let director of film.directors.split(/\s*,\s*/)) {
+                    (directors[director] || (directors[director] = [])).push(film)
                 }
             }
         }

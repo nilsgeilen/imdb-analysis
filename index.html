@@ -169,14 +169,16 @@
             </p>
             <p>
                 <question>Which directors do you feel most ambiguous about?</question>
-                This chart orders directors by the variance σ<sup>2</sup> of their film's rating. It additionally shows the average rating μ and the difference δ between the best and worst rating.
+                This chart orders directors by the variance σ<sup>2</sup> of their film's rating. It additionally shows
+                the average rating μ and the difference δ between the best and worst rating.
                 <center><img src='img/formula-variance.png' width='210'></center>
                 <br>
                 <div id="chart-ambiguous" style="width:800px; height:300px;" class="chart">
                     <canvas id="ctx1b" width="800" height="300"></canvas>
                 </div>
                 <center>
-                    <button id="button-ambiguous" class="btn btn-outline-secondary" onclick="createDirectorRatingDiffChart()">more ...</button>
+                    <button id="button-ambiguous" class="btn btn-outline-secondary"
+                        onclick="createDirectorRatingDiffChart()">more ...</button>
                 </center>
             </p>
 
@@ -188,6 +190,29 @@
                 <div style="width:600px; height:350px;" class="chart">
                     <canvas id="ctx1d" width="600" height="350"></canvas>
                 </div>
+            </p>
+
+            <h4>Genres</h4>
+            <hr>
+            <p>
+                <question></question>
+                <center>
+                    Genre&nbsp;
+                    <select id="select_sorting_genre_top_list" onChange="displayGenreTopList()">
+                    </select>
+                </center>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>rating</th>
+                            <th>title</th>
+                            <th>director</th>
+                            <th>year</th>
+                        </tr>
+                    </thead>
+                    <tbody id="genre_top_list">
+                    </tbody>
+                </table>
             </p>
 
             <h4>Decade Comparision</h4>
@@ -229,7 +254,8 @@
             <p>
                 <question>Which countries produce the films you watch?</question>
                 This pie chart breaks down the number of ratings for film produced in different countries.
-                Coproductions are handled as their own category, internally further split into those where the country is the main producer and those where it is one of the minor producers.
+                Coproductions are handled as their own category, internally further split into those where the country
+                is the main producer and those where it is one of the minor producers.
                 The country which IMDb lists first is counted as the main producer.
                 <div style="width:600px; height:400px;" class="chart">
                     <canvas id="ctx4" width="600" height="400"></canvas>
