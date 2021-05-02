@@ -41,9 +41,10 @@ function visualizeData(films) {
     //     else console.log(film)
     films = films.filter(film => film.title_type && film.title_type.match(/movie|tvMovie|video/))
     console.log(films)
-    displayCoutryStatsAsync(films)
+    //displayCoutryStatsAsync(films)
     createStats(films)
     displayDecadeStats(films)
+    displayRatingYearStats(films)
     displayDirectorStats(films)
     scatterRuntime(films)
     displayGenreStats(films)
@@ -290,6 +291,36 @@ const displayDirectorStats = function () {
         let labels = directors_sorted_by_avg_rating_diff.map(getter('name'))
 
         avg_rating_diff_chart(labels, [dataset])
+    }
+}()
+
+const displayRatingYearStats = function()  {
+    const chart = createVerticalBarChart($("#ctxy"), true)
+
+    return function(films) {
+        let years = {}
+        for (let film of films) {
+            year = film['date_rated'].substring(0,4)
+            if(years[year]) {
+                years[year].push(film)
+            } else {
+                years[year] = [film]
+            }
+        }
+
+        labels = Object.keys(years).sort()
+        let dataset1 = {
+            backgroundColor: COLOR_CNT,
+            label: '# of films',
+            data: labels.map(label => years[label].length)
+        }
+        let dataset2 = {
+            backgroundColor: COLOR_AVG,
+            label: 'average rating',
+            data: labels.map(label => round(avg(years[label], getter('your_rating')), 1))
+        }
+
+        chart(labels, [dataset1, dataset2])
     }
 }()
 
@@ -639,6 +670,55 @@ function createBarChart(ctx) {
 
         chart(new Chart(ctx, {
             type: 'horizontalBar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: options
+        }))
+    }
+}
+
+function createVerticalBarChart(ctx) {
+    const chart = createChartHolder()
+    return function (labels, datasets, beginAt = 0, stacked) {
+        let options = {
+            legend: {
+                display: datasets.length > 1
+            }
+        }
+        let ticks = beginAt === false ? {} : { suggestedMin: beginAt }
+        if (!stacked && datasets.length === 2) {
+            datasets[0].yAxisID = 'A'
+            datasets[1].yAxisID = 'B'
+            options.scales = {
+                yAxes: [{
+                    id: 'A',
+                    type: 'linear',
+                    position: 'left',
+                    ticks: ticks
+                }, {
+                    id: 'B',
+                    type: 'linear',
+                    position: 'right',
+                    ticks: ticks
+                }]
+            }
+        } else {
+            options.scales = {
+                yAxes: [{
+                    stacked: stacked,
+                    type: 'linear',
+                    ticks: ticks
+                }],
+                xAxes: [{
+                    stacked: stacked
+                }]
+            }
+        }
+
+        chart(new Chart(ctx, {
+            type: 'bar',
             data: {
                 labels: labels,
                 datasets: datasets
