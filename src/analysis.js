@@ -41,7 +41,7 @@ function visualizeData(films) {
     //     else console.log(film)
     films = films.filter(film => film.title_type && film.title_type.match(/movie|tvMovie|video/))
     console.log(films)
-    //displayCoutryStatsAsync(films)
+    displayCoutryStatsAsync(films)
     createStats(films)
     displayDecadeStats(films)
     displayRatingYearStats(films)
