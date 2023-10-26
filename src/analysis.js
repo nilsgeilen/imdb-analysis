@@ -238,17 +238,28 @@ const displayDirectorStats = function () {
 
         let l = directors.sort((a, b) => b.film_cnt * 1000 - a.film_cnt * 1000 + b.avg_rating - a.avg_rating).slice(0, 12)
 
-        let datasets_chrono = zip([l, STD_COLORS]).map(([director, color]) => ({
-            label: director.name,
-            data: director.films.sort((a, b) => b.year - a.year).map(film => ({ x: film.year, y: film.your_rating, title: film.title })),
-            fill: false,
-            borderColor: color,
-            backgroundColor: color,
-            pointStyle: 'rectRounded',
-            pointRadius: 10.0,
-            pointHoverRadius: 10.0,
-            pointHitRadius: 10.0
-        }))
+
+        let datasets_chrono = zip([l, STD_COLORS]).map(([director, color]) => {
+            let films_by_year = groupBy (getter('year')) (director.films)
+            let data = []
+            let sizes = []
+            for (let year of Object.keys(films_by_year)) {
+                let films = films_by_year[year].sort((a,b) => a.your_rating - b.your_rating)
+                data.push({x:year, y: avg(films, getter('your_rating')), title: films.map(f => f.title + ' ('+ f.your_rating+')').join(', ')})
+                sizes.push(6.0 + 3.0 * films.length)
+            }
+            return {
+                label: director.name,
+                data: data,
+                fill: false,
+                borderColor: color,
+                backgroundColor: color,
+                pointStyle: 'rectRounded',
+                pointRadius: sizes,
+                pointHoverRadius: sizes,
+                pointHitRadius: sizes
+            }
+        })
 
         time_chart(new Chart($("#ctx1c"), {
             type: 'line',
