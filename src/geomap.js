@@ -1,11 +1,3 @@
-const getCountryCode = function () {
-    const codes = { 'UK': 'GBR' }
-    for (const country of Datamap.prototype.worldTopo.objects.world.geometries) {
-        codes[country.properties.name] = country.id;
-        codes[country.id] = country.id
-    }
-    return country => codes[country]
-}()
 
 function createMap(countries) {
 
@@ -25,8 +17,8 @@ function createMap(countries) {
         const flop = argmin(comparator("your_rating"))(country.films_main)
         if (flop.length && flop[0].your_rating < 5.5)
             tooltip += highlight("<br>flop: ") + flop.map(getter('title')).join(', ')
-        series_cnt.push(createCountryData(getCountryCode(country.name), Math.log10(country.films_main.length + 1), tooltip))
-        series_avg.push(createCountryData(getCountryCode(country.name), country.avg_rating * country.avg_rating, tooltip))
+        series_cnt.push(createCountryData(country.iso3, Math.log10(country.films_main.length + 1), tooltip))
+        series_avg.push(createCountryData(country.iso3, country.avg_rating * country.avg_rating, tooltip))
     }
 
     paintWorldMap($('#map_cnt'), series_cnt, COLOR_CNT)

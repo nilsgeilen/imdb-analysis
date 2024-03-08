@@ -9,7 +9,7 @@ const COLOR_COPROD = "gray"
 const COLOR_OTHER = "gray"
 
 const STD_COLORS = ["#ff8000", "#0080ff", "#ff0080", "#80ff00", "#8000ff", "#00ff80",
-    "#d04080", "#40d080", "#d08040", "#80d040", "#4080d0", "#8040d0"]
+    "#d04080", "#40d080", "#d08040", "#80d040", "#4080d0", "#8040d0",'#808080','#404040','#d0d0d0','black']
 
 const COUNTRY_COPRODUCTION = "coproduction"
 const COUNTRY_OTHER = "other"
@@ -17,14 +17,14 @@ const COUNTRY_OTHER = "other"
 Chart.defaults.global.defaultFontSize = 16
 Chart.defaults.global.defaultFontColor = 'black'
 
-const getCountryData = function () {
+function loadData(url) {
     let data = null
     return function (callback) {
         if (data) {
             callback(data)
         } else {
             $.ajax({
-                url: 'data/countries.csv',
+                url: url,
                 dataType: 'text',
                 type: "GET",
                 success: callback,
@@ -32,7 +32,10 @@ const getCountryData = function () {
             })
         }
     }
-}()
+}
+
+const loadCountryData = loadData('data/production_countries.csv')
+const loadISOCountryCodes = loadData('data/iso_country_codes.csv')
 
 function visualizeData(films) {
     // for (let film of films)
@@ -232,14 +235,12 @@ const displayDirectorStats = function () {
 
         createTopDirectorChart(directors)
 
-        let top_10 = directors.sort((a, b) => b.score - a.score).slice(0, N)
-
         createDirectorRatingDiffChart(false, directors)
 
-        let l = directors.sort((a, b) => b.film_cnt * 1000 - a.film_cnt * 1000 + b.avg_rating - a.avg_rating).slice(0, 12)
+        let l = directors.sort((a, b) => b.film_cnt * 1000 - a.film_cnt * 1000 + b.avg_rating - a.avg_rating).slice(0, 16)
 
 
-        let datasets_chrono = zip([l, STD_COLORS]).map(([director, color]) => {
+        let datasets_chrono = zip([[...l.keys()], l, STD_COLORS]).map(([rank, director, color]) => {
             let films_by_year = groupBy (getter('year')) (director.films)
             let data = []
             let sizes = []
@@ -250,6 +251,7 @@ const displayDirectorStats = function () {
             }
             return {
                 label: director.name,
+                hidden: rank > 3,
                 data: data,
                 fill: false,
                 borderColor: color,
@@ -539,95 +541,108 @@ const displayCoutryStatsAsync = function () {
     const bar_chart_cnt = createBarChart($("#ctx4b"))
     const bar_chart_avg = createBarChart($("#ctx4c"))
     return function (films) {
-        getCountryData(data => {
-            let map = parseMapfromCsv(data)
+        loadCountryData(data => {
+                loadISOCountryCodes(iso_codes => {
+                let map = parseMapfromCsv(data)
 
-            let countries = createCountryList(films, map)
+                let country_iso3_codes = {}
+                let country_names = {}
 
-            console.log(countries)
-
-        //    let factory = createStatObjFactory();
-
-            for (let country of countries) {
-                if (!country.films) {
-                    console.log("Country has no films: " + country.name)
-                    continue
+                for (let row of iso_codes.split (/\r?\n/)) {
+                    let [iso2, iso3, name] = row.split(';')
+                    country_iso3_codes[iso2] = iso3
+                    country_names[iso2] = name
                 }
-                country.film_cnt = country.films_excl_coprod.length
-                country.avg_rating = +avg(country.films, getter("your_rating")).toFixed(1)
-            }
 
-            countries.sort((a, b) => b.film_cnt - a.film_cnt)
+                console.log(country_names)
 
-            let N_1 = 12
-            N_1 = countries.length > N_1 ? N_1 : countries.length
-            for (let i = 0; i < N_1; i++) {
-                if (countries[i].film_cnt <= 1) {
-                    N_1 = i
-                    break
+                let countries = createCountryList(films, map, country_iso3_codes, country_names)
+
+                console.log(countries)
+
+            //    let factory = createStatObjFactory();
+
+                for (let country of countries) {
+                    if (!country.films) {
+                        console.log("Country has no films: " + country.name)
+                        continue
+                    }
+                    country.film_cnt = country.films_excl_coprod.length
+                    country.avg_rating = +avg(country.films, getter("your_rating")).toFixed(1)
                 }
-            }
 
-            let country_sample = [...countries.slice(0, N_1), { name: COUNTRY_OTHER, film_cnt: sum(countries.slice(N_1), getter("film_cnt")) }]
-            let color_sample = emitter(STD_COLORS)
+                countries.sort((a, b) => b.film_cnt - a.film_cnt)
 
-            let dataset_cnt = {
-                backgroundColor: country_sample.map((country, i) =>
-                    country.name === COUNTRY_COPRODUCTION ? COLOR_COPROD : country.name === COUNTRY_OTHER ? COLOR_OTHER : color_sample()),
-                label: '# of Films',
-                data: country_sample.map(getter("film_cnt"))
-            }
-
-            pie_chart(new Chart($("#ctx4"), {
-                type: 'doughnut',
-                data: {
-                    labels: country_sample.map(getter('name')),
-                    datasets: [dataset_cnt]
-                },
-                options: {
-                    legend: {
-                        position: "right"
+                let N_1 = 12
+                N_1 = countries.length > N_1 ? N_1 : countries.length
+                for (let i = 0; i < N_1; i++) {
+                    if (countries[i].film_cnt <= 1) {
+                        N_1 = i
+                        break
                     }
                 }
-            }))
 
-            const N_2 = 15
+                let country_sample = [...countries.slice(0, N_1), { name: COUNTRY_OTHER, film_cnt: sum(countries.slice(N_1), getter("film_cnt")) }]
+                let color_sample = emitter(STD_COLORS)
 
-            let top_countries = countries.filter(country => country.name !== COUNTRY_COPRODUCTION).sort((a, b) => b.films.length - a.films.length).slice(0, N_2)
+                let dataset_cnt = {
+                    backgroundColor: country_sample.map((country, i) =>
+                        country.name === COUNTRY_COPRODUCTION ? COLOR_COPROD : country.name === COUNTRY_OTHER ? COLOR_OTHER : color_sample()),
+                    label: '# of Films',
+                    data: country_sample.map(getter("film_cnt"))
+                }
 
-            let dataset_excl_coprod = {
-                backgroundColor: "#000030",
-                label: '# of domestic films',
-                data: [...top_countries.map(entry => entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
-            }
+                pie_chart(new Chart($("#ctx4"), {
+                    type: 'doughnut',
+                    data: {
+                        labels: country_sample.map(getter('name')),
+                        datasets: [dataset_cnt]
+                    },
+                    options: {
+                        legend: {
+                            position: "right"
+                        }
+                    }
+                }))
 
-            let dataset_coprod_main = {
-                backgroundColor: "#4444ff",
-                label: '# of coproductions (main)',
-                data: [...top_countries.map(entry => entry.films_main.length - entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
-            }
+                const N_2 = 15
 
-            let dataset_coprod = {
-                backgroundColor: "#aaaaff",
-                label: '# of coproductions (minor)',
-                data: [...top_countries.map(entry => entry.films.length - entry.films_main.length), sum(countries.slice(N_2), getter("film_cnt"))]
-            }
+                let top_countries = countries.filter(country => country.name !== COUNTRY_COPRODUCTION).sort((a, b) => b.films.length - a.films.length).slice(0, N_2)
 
-            bar_chart_cnt(top_countries.map(entry => entry.name), [dataset_excl_coprod, dataset_coprod_main, dataset_coprod], false, true)
+                let dataset_excl_coprod = {
+                    backgroundColor: "#000030",
+                    label: '# of domestic films',
+                    data: [...top_countries.map(entry => entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
+                }
 
-            const N_3 = 8
-            let countries_by_avg_rating = countries.filter(country => country.films.length >= 3).sort((a, b) => b.avg_rating - a.avg_rating)
-            if (countries_by_avg_rating.length > N_3 * 2 + 1)
-                countries_by_avg_rating = [...countries_by_avg_rating.slice(0, N_3), { name: '...', avg_rating: 1 }, ...countries_by_avg_rating.slice(-N_3)]
+                let dataset_coprod_main = {
+                    backgroundColor: "#4444ff",
+                    label: '# of coproductions (main)',
+                    data: [...top_countries.map(entry => entry.films_main.length - entry.film_cnt), sum(countries.slice(N_2), getter("film_cnt"))]
+                }
 
-            let dataset_avg = {
-                backgroundColor: COLOR_AVG,
-                label: 'average rating',
-                data: countries_by_avg_rating.map(entry => entry.avg_rating)
-            }
-            bar_chart_avg(countries_by_avg_rating.map(entry => entry.name), [dataset_avg], 1)
+                let dataset_coprod = {
+                    backgroundColor: "#aaaaff",
+                    label: '# of coproductions (minor)',
+                    data: [...top_countries.map(entry => entry.films.length - entry.films_main.length), sum(countries.slice(N_2), getter("film_cnt"))]
+                }
 
-            createMap(countries)
+                bar_chart_cnt(top_countries.map(entry => entry.name), [dataset_excl_coprod, dataset_coprod_main, dataset_coprod], false, true)
+
+                const N_3 = 8
+                let countries_by_avg_rating = countries.filter(country => country.films.length >= 3).sort((a, b) => b.avg_rating - a.avg_rating)
+                if (countries_by_avg_rating.length > N_3 * 2 + 1)
+                    countries_by_avg_rating = [...countries_by_avg_rating.slice(0, N_3), { name: '...', avg_rating: 1 }, ...countries_by_avg_rating.slice(-N_3)]
+
+                let dataset_avg = {
+                    backgroundColor: COLOR_AVG,
+                    label: 'average rating',
+                    data: countries_by_avg_rating.map(entry => entry.avg_rating)
+                }
+                bar_chart_avg(countries_by_avg_rating.map(entry => entry.name), [dataset_avg], 1)
+
+                createMap(countries)
+            })
         })
     }
 }()
@@ -781,7 +796,11 @@ const createDirectorList = function () {
         let directors = {}
         for (let film of films) {
             if (film.directors) {
-                for (let director of film.directors.split(/\s*,\s*/)) {
+                let ds = film.directors.split(/\s*,\s*/)
+                if (ds.length === 2 && ds.includes('Joel Coen') && ds.includes('Ethan Coen')) {
+                    ds = ['Joel + Ethan Coen']
+                }
+                for (let director of ds) {
                     (directors[director] || (directors[director] = [])).push(film)
                 }
             }
@@ -791,18 +810,20 @@ const createDirectorList = function () {
     }
 }()
 
-function Country(name, films = [], films_excl_coprod = []) {
+function Country(name, iso2, iso3, films = [], films_excl_coprod = []) {
     this.name = name
+    this.iso2 = iso2
+    this.iso3 = iso3
     this.films = films
     this.films_excl_coprod = films_excl_coprod
     this.films_main = []
 }
 
-function createCountryList(films, map) {
+function createCountryList(films, map, country_iso3_codes, country_names) {
     let result = {}
     result[COUNTRY_COPRODUCTION] = new Country(COUNTRY_COPRODUCTION)
     for (let film of films) {
-        let countries = map[film.title + ";" + film.year]
+        let countries = map[film.const]
         if (countries) {
             countries = countries.split(/,/)
             let first = true
@@ -811,7 +832,7 @@ function createCountryList(films, map) {
                 if (result[country]) {
                     result[country].films.push(film)
                 } else {
-                    result[country] = new Country(country, [film])
+                    result[country] = new Country(country_names[country], country, country_iso3_codes[country], [film])
                 }
                 if (first) {
                     first = false
