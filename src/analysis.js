@@ -38,12 +38,12 @@ const loadCountryData = loadData('data/production_countries.csv')
 const loadISOCountryCodes = loadData('data/iso_country_codes.csv')
 
 function visualizeData(films) {
-    // for (let film of films)
-    // if(film.genres)
-    //     film.genres = film.genres.split(/,\s*/);
-    //     else console.log(film)
-    films = films.filter(film => film.title_type && film.title_type.match(/movie|tvMovie|video/))
-    console.log(films)
+
+    for (let film of films) {
+        // if(film.genres)
+        //     film.genres = film.genres.split(/,\s*/);
+        //     else console.log(film)
+    }
     displayCoutryStatsAsync(films)
     createStats(films)
     displayDecadeStats(films)
@@ -51,7 +51,6 @@ function visualizeData(films) {
     displayDirectorStats(films)
     scatterRuntime(films)
     displayGenreStats(films)
-    // displayFilmStats(films)
 }
 
 
@@ -83,29 +82,83 @@ function loadDataFromFile(file) {
 }
 document.getElementById('fileinput').addEventListener('change', evt => loadDataFromFile(evt.target.files[0]), false)
 
-// function displayFilmStats(films) {
-//     for (let film of films) {
-//         film.rating_diff = film.your_rating - film.imdb_rating
-//     }
+const createStats = function() {
+    const chart = createChartHolder()
+    return function(films) {
+        let types = {'sum': films}
+        for (let film of films) {
+            if (film.title_type in types) {
+                types[film.title_type].push(film)
+            } else {
+                types[film.title_type] = [film]
+            }
+        }
 
-//     films.sort((a, b) => b.rating_diff - a.rating_diff)
+        let data = []
+        for (let type in types) {
+            data.push({
+                name:type,
+                film_cnt: types[type].length,
+                your_avg_rating : round(avg(types[type], getter('your_rating')), 1),
+                imdb_avg_rating: round(avg(types[type], getter('imdb_rating')), 1)
+            })
+        }
+        $('#formula_yar').text(round(avg(films, getter('your_rating')), 1))
+    
 
-//    // console.log(films)
-// }
+        data.sort((a, b) => b.film_cnt - a.film_cnt)
 
-function createStats(films) {
-    let tuples = [['sum', films],
-    ['film', films.filter(film => film.title_type.match(/movie/))],
-    ['tv', films.filter(film => film.title_type.match(/tvMovie/))],
-    ['video', films.filter(film => film.title_type.match(/video/))]]
-    for (let [str, list] of tuples) {
-        $('#' + str + '_cnt_txt').text(list.length)
-        let your_avg_rating = round(avg(list, getter('your_rating')), 1)
-        $('#' + str + '_yar_txt').text(your_avg_rating)
-        $('#' + str + '_iar_txt').text(round(avg(list, getter('imdb_rating')), 1))
+        let dataset1 = {
+            backgroundColor: COLOR_CNT,
+            label: '# of films',
+            data: data.map(entry => entry.film_cnt),
+            xAxisID: 'A'
+        }
+        let dataset2 = {
+            backgroundColor: COLOR_AVG,
+            label: 'your average rating',
+            data: data.map(entry => entry.your_avg_rating),
+            xAxisID: 'B'
+        }
+        let dataset3 = {
+            backgroundColor: COLOR_RATING,
+            label: 'imdb avgerage rating',
+            data: data.map(entry => entry.imdb_avg_rating),
+            xAxisID: 'B'
+        }
+
+        let labels = data.map(elem => elem.name)
+
+        chart(new Chart($("#ctx_title_types"), {
+            type: 'horizontalBar',
+            data: {
+
+                labels: labels,
+                datasets: [dataset1, dataset2, dataset3]
+            },
+            options: {
+                scales: {
+                    xAxes: [{
+                        id: 'A',
+                        type: 'linear',
+                        position: 'top',
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }, {
+                        id: 'B',
+                        type: 'linear',
+                        position: 'bottom',
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+
+            }
+        }))
     }
-    $('#formula_yar').text(round(avg(films, getter('your_rating')), 1))
-}
+}()
 
 const createTopDirectorChart = function () {
     const chart = createBarChart($("#ctx1"))
@@ -423,26 +476,35 @@ const scatterRuntime = function () {
 
         films = films.filter(film => film.runtime_mins && film.runtime_mins.match(/\d+/))
 
-        let dataset = {
-            backgroundColor: COLOR_RATING,
-            label: 'Scatter Dataset',
-            data: [],
+        let films_by_title_type = groupBy(getter('title_type'))(films)
+
+        let datasets = Object.entries(films_by_title_type).map(([title_type, films]) => ({
+            hidden: false,
+            label: title_type,
+            data: films.map(film => ({ x: film.runtime_mins, y: film.your_rating })),
             pointStyle: 'rectRounded',
             pointRadius: 7.0,
             pointHoverRadius: 7.0,
             pointHitRadius: 7.0
+        }))
+
+        datasets.sort((a, b) => b.data.length - a.data.length)
+
+        for (let i in datasets) {
+            datasets[i].backgroundColor = STD_COLORS[i]
         }
 
-        for (let film of films) {
-            dataset.data.push({ x: film.runtime_mins, y: film.your_rating })
-        }
+        let labels = datasets.map(dataset => films_by_title_type[dataset.label]).map(films=> films.map(getter('title')))
+
+  
+
 
         let avg_len = Object.entries(groupBy(getter('your_rating'))(films)).map(([rating, films]) => ({
             y: rating,
             x: avg(films, getter('runtime_mins'))
         }))
 
-        let dataset_avg = {
+        datasets.push({
             backgroundColor: COLOR_AVG,
             borderColor: COLOR_AVG,
             label: 'avg',
@@ -451,14 +513,13 @@ const scatterRuntime = function () {
             pointHoverRadius: 10.0,
             pointHitRadius: 10.0,
             data: avg_len
-        }
+        })
 
 
         chart(new Chart($("#ctx3"), {
             type: 'scatter',
             data: {
-                labels: films.map(film => film.title),
-                datasets: [dataset, dataset_avg]
+                datasets: datasets
             },
             options: {
                 scales: {
@@ -479,15 +540,12 @@ const scatterRuntime = function () {
                         }
                     }]
                 },
-                legend: {
-                    display: false
-                },
                 tooltips: {
                     callbacks: {
                         label: function (tooltipItem, data) {
-                            if (tooltipItem.datasetIndex)
+                            if (tooltipItem.datasetIndex == data.datasets.length - 1)
                                 return "average runtime for rating " + tooltipItem.yLabel + ": " + round(tooltipItem.xLabel) + 'mins'
-                            var label = data.labels[tooltipItem.index];
+                            var label = labels[tooltipItem.datasetIndex][tooltipItem.index];
                             return label + ' (' + tooltipItem.xLabel + 'mins, rating:' + tooltipItem.yLabel + ')';
                         }
                     }

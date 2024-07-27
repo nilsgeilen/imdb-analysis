@@ -22,7 +22,8 @@ function parseCsvWithHeader (source, sep = ',') {
                     obj[headers[i]] = cols[i]
                 }
             }
-            results.push(obj)
+            if (Object.keys(obj).length > 0)
+                results.push(obj)
         }
     }
     return results

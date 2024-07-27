@@ -60,76 +60,17 @@
                 })
             </script>
 
-            <h4>Statistics</h4>
+            <h4>Title Type Statistics</h4>
             <hr>
             <p>
-                This analysis concentrates itself on items of the categries <i>movie</i>, <i>tv movie</i> and
+                Imdb classifies its items into different title types like <i>movie</i>, <i>tv movie</i> and
                 <i>video</i>,
                 which refer to films shown in cimena, those produced for television and those which are release
                 direct-to-dvd respectively.
-                Thereby it excludes tv series, documentries etc.
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th># of films</th>
-                            <th>⌀ your rating</th>
-                            <th>⌀ imdb rating</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>movie</td>
-                            <td>
-                                <div id="film_cnt_txt">
-                            </td>
-                            <td>
-                                <div id="film_yar_txt">
-                            </td>
-                            <td>
-                                <div id="film_iar_txt">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>tv movie</td>
-                            <td>
-                                <div id="tv_cnt_txt">
-                            </td>
-                            <td>
-                                <div id="tv_yar_txt">
-                            </td>
-                            <td>
-                                <div id="tv_iar_txt">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>video</td>
-                            <td>
-                                <div id="video_cnt_txt">
-                            </td>
-                            <td>
-                                <div id="video_yar_txt">
-                            </td>
-                            <td>
-                                <div id="video_iar_txt">
-                            </td>
-                        </tr>
-                    </tbody>
-                    <tbody>
-                        <tr>
-                            <td>Σ</td>
-                            <td>
-                                <div id="sum_cnt_txt">
-                            </td>
-                            <td>
-                                <div id="sum_yar_txt">
-                            </td>
-                            <td>
-                                <div id="sum_iar_txt">
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                This chart visualizes which categories your rated items come from.
+                <div style="width:600px; height:550px;" class="chart">
+                    <canvas id="ctx_title_types" width="600" height="550"></canvas>
+                </div>
             </p>
 
             <h4>Your Favourite Directors</h4>
