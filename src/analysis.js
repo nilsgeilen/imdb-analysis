@@ -38,12 +38,6 @@ const loadCountryData = loadData('data/production_countries.csv')
 const loadISOCountryCodes = loadData('data/iso_country_codes.csv')
 
 function visualizeData(films) {
-
-    for (let film of films) {
-        // if(film.genres)
-        //     film.genres = film.genres.split(/,\s*/);
-        //     else console.log(film)
-    }
     displayCoutryStatsAsync(films)
     createStats(films)
     displayDecadeStats(films)
@@ -197,11 +191,11 @@ const createDirectorRatingDiffChart = function () {
     return function (large = !enlarged, directors = createDirectorList()) {
         enlarged = large
 
-        const N_delta = large ? 10 : 5
+        const N_delta = large ? 20 : 5
 
         $('#button-ambiguous').text(large ? "less ..." : "more ...")
-        $('#chart-ambiguous').height(large ? 550 : 300).html(large
-            ? '<canvas id="ctx1b" width="800" height="550"></canvas>'
+        $('#chart-ambiguous').height(large ? 1000 : 300).html(large
+            ? '<canvas id="ctx1b" width="800" height="1000"></canvas>'
             : '<canvas id="ctx1b" width="800" height="300"></canvas>'
         )
 
@@ -242,8 +236,6 @@ const createDirectorRatingDiffChart = function () {
             pointHoverRadius: 10.0,
             pointHitRadius: 10.0
         }])
-
-        // console.log(datasets)
 
         rating_diff_chart(new Chart($("#ctx1b"), {
             type: 'line',
@@ -398,8 +390,6 @@ const displayDecadeStats = function () {
 
         const factory = createStatObjFactory()
         let _decades = Object.keys(decades).sort().map(decade => factory(decade, decades[decade]))
-
-      //  console.log(_decades)
 
         let dataset1 = {
             backgroundColor: "blue",
@@ -813,13 +803,14 @@ function createVerticalBarChart(ctx) {
 }
 
 function createStatObjFactory(AVG_RATING = 5.5) {
+    let dummy = {"your_rating": AVG_RATING}
     return function (name, films) {
         return Object.freeze(new function () {
             this.name = name
             this.films = films
             this.film_cnt = films.length
             let avg_rating = avg(films, getter("your_rating"))
-            this.score = Math.max(round((avg_rating - AVG_RATING) * this.film_cnt, 1), 0)
+            this.score = round(avg([...films,  dummy,  dummy], getter("your_rating")), 2)
             this.avg_rating = round(avg_rating, 1)
             this.avg_rating_diff = round(avg_rating - avg(films, getter('imdb_rating')), 1)
             this.variance = round(sum(films, film => Math.pow(film.your_rating - avg_rating, 2)) / films.length, 1)
@@ -863,7 +854,7 @@ const createDirectorList = function () {
                 }
             }
         }
-        const factory = createStatObjFactory(avg(films, getter('your_rating')))
+        const factory = createStatObjFactory()
         return data = Object.entries(directors).filter(([_, films]) => films.length >= 2).map(entry => factory(...entry))
     }
 }()

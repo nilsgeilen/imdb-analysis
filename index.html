@@ -79,14 +79,9 @@
                 <question>Which are your favourite directors?</question>
                 This chart lists the top ten directors according to their score. Alternatively directors can be sorted
                 by the number of their films which you have rated or the average rating you gave their films.
-                For all diagrams in this chapter, directors with only asingle rating are excluded, therefore only
+                For all diagrams in this chapter, directors with only a single rating are excluded, therefore only
                 directors with at least two rated film are considered for the ranking.
-                The score for a director <i>d</i> is computed in the following way, where <i>a</i> = <span
-                    id="formula_yar"></span>
-                is your average rating and <i>R<sub>d</sub></i> denotes
-                all of your ratings for films by director <i>d</i>:
-                <center><img src='img/formula.png' width='180'></center>
-                <br>
+                The score for a director is the average rating of their films including two dummy ratings of 5.5 to discount directors with only few rated films. 
                 <center>
                     sort directors by their &nbsp;
                     <select id="select_sorting_ctx1" onChange="createTopDirectorChart()">
@@ -101,8 +96,8 @@
             </p>
             <p>
                 <question>How did your favourite directors develop over time?</question>
-                The next visualizes the development of directors by plotting your ratings for their films
-                over time given in years. Includes the directors with most rated films.
+                The next chart visualizes the development of directors by plotting your ratings for their films
+                over time. Includes directors with most rated films.
                 Different directors can be selected and deselected by clicking on their name in the legend.
                 <div style="width:800px; height:400px;" class="chart">
                     <canvas id="ctx1c" width="800" height="400"></canvas>
